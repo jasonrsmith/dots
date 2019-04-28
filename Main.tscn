@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Main.gd" type="Script" id=1]
+[ext_resource path="res://Board.tscn" type="PackedScene" id=2]
+
+[node name="Main" type="Node2D"]
+script = ExtResource( 1 )
+player_board = ExtResource( 2 )
+
+[node name="Background" type="ColorRect" parent="."]
+margin_left = -7.0
+margin_top = -11.0
+margin_right = 1900.0
+margin_bottom = 1102.0
+color = Color( 0.00784314, 0.105882, 0.290196, 0.576471 )
+
+[node name="PlayerBoard" parent="." instance=ExtResource( 2 )]
+position = Vector2( 370, 60 )
+
