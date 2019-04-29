@@ -20,7 +20,6 @@ func setColorType(newColorType):
 		colorType = newColorType
 		$Pivot/Sprite.texture = RUNE_TYPES[colorType]
 
-
 func initType():
 	randomize()
 	var pick = randi() % RUNE_TYPES.size()
@@ -38,7 +37,10 @@ func shift(targetPosition):
 	emit_signal("reposition_end")
 
 func remove():
+	#emit_signal("reposition_start")
 	$AnimationPlayer.play("explode");
+	yield($AnimationPlayer, "animation_finished")
+	#emit_signal("reposition_end")
 
 func _ready():
 	initType()

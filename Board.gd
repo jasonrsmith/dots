@@ -1,6 +1,7 @@
 extends Node2D
 
 export (PackedScene) var Rune
+export (PackedScene) var DebugText
 
 export (int) var boardSizeX
 export (int) var boardSizeY
@@ -95,26 +96,60 @@ func checkForMatch():
 	for i in range(boardSizeX):
 		var matches = [i]
 		for j in range(i + 1, boardSizeX):
-			if grid[y][i].colorType != grid[y][j].colorType:
+			if !grid[y][i] || !grid[y][j] || grid[y][i].colorType != grid[y][j].colorType:
 				break
 			matches.append(j)
 		if matches.size() >= 3:
 			print("matches")
 			print(matches)
 			scoreAndRemoveMatches(matches)
-			settleBoard()
+			return
 
 func scoreAndRemoveMatches(matches):
 	$SuccessSound.play()
 	for i in matches:
 		grid[boardSizeY / 2][i].remove()
+		grid[boardSizeY / 2][i] = null
 
 func settleBoard():
-	pass
+	print("settling")
+	var y = boardSizeY / 2
+	for x in range(boardSizeX):
+		print(grid[y][x])
+		if !grid[y][x]:
+			if grid[y-1][x]:
+				var i=1
+				while grid[y-i][x]:
+					grid[y-i+1][x] = grid[y-i][x]
+					grid[y-i+1][x].shift(Vector2(x, y-i+1) * runeSize)
+					i += 1
+				grid[y-i+1][x] = null
+			elif grid[y+1][x]:
+				var i=0
+				while grid[y+i+1][x]:
+					grid[y+i][x] = grid[y+i+1][x]
+					grid[y+i][x].shift(Vector2(x, y+i) * runeSize)
+					i += 1
+				grid[y+i][x] = null
 
+func debugDrawGrid():
+	for child in $DebugArea.get_children():
+		child.queue_free()
+	for x in range(boardSizeX):
+		for y in range(boardSizeY):
+			var label = DebugText.instance()
+			label.text = str(x) + "," + str(y)
+			label.text += "\n"
+			label.text += \
+				str(grid[y][x].colorType) if grid[y][x] \
+				else "null"
+			label.margin_top = y * runeSize
+			label.margin_left = x * runeSize
+			$DebugArea.add_child(label)
 
 func _ready():
 	initGrid(Vector2(boardSizeX, boardInitSizeY))
+	debugDrawGrid()
 	updateCursor(cursorPos)
 
 func _process(delta):
@@ -128,6 +163,7 @@ func _process(delta):
 		shiftMiddleRowLeft()
 	if Input.is_action_just_pressed("ui_right"):
 		shiftMiddleRowRight()
+	debugDrawGrid()
 
 func _on_rune_position_start():
 	repositionCount += 1
@@ -136,3 +172,4 @@ func _on_rune_position_end():
 	repositionCount -= 1
 	if repositionCount == 0:
 		checkForMatch()
+		settleBoard()
