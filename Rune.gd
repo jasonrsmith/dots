@@ -26,14 +26,14 @@ func initType():
 	setColorType(pick)
 
 func shift(targetPosition):
-	set_process(false)
+	#set_process(false)
 	emit_signal("reposition_start")
 	$ClickSound.play(0.1)
 	$AnimationPlayer.play("move")
 	$Tween.interpolate_property(self, "position", position, targetPosition, $AnimationPlayer.current_animation_length, Tween.TRANS_LINEAR, Tween.EASE_IN)
 	$Tween.start()
 	yield($AnimationPlayer, "animation_finished")
-	set_process(true)
+	#set_process(true)
 	emit_signal("reposition_end")
 
 func remove():

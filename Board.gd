@@ -8,6 +8,8 @@ export (int) var boardSizeY
 export (int) var boardInitSizeY
 export (int) var runeSize
 
+enum Orientation {TOP, BOTTOM}
+
 var cursorPos = 0
 var grid = []
 var repositionCount = 0
@@ -66,9 +68,11 @@ func shiftMiddleRowLeft():
 	var tmp = grid[y][0]
 	for x in range(boardSizeX-1):
 		grid[y][x] = grid[y][x + 1]
-		grid[y][x].shift(Vector2(x, y) * runeSize)
+		if grid[y][x]:
+			grid[y][x].shift(Vector2(x, y) * runeSize)
 	grid[y][boardSizeX-1] = tmp
-	grid[y][boardSizeX-1].shift(Vector2(boardSizeX-1, y) * runeSize)
+	if grid[y][boardSizeX-1]:
+		grid[y][boardSizeX-1].shift(Vector2(boardSizeX-1, y) * runeSize)
 
 func shiftMiddleRowRight():
 	var y = boardSizeY / 2
@@ -76,9 +80,11 @@ func shiftMiddleRowRight():
 	for x in range(boardSizeX - 1):
 		x = boardSizeX - x - 1
 		grid[y][x] = grid[y][x - 1]
-		grid[y][x].shift(Vector2(x, y) * runeSize)
+		if grid[y][x]:
+			grid[y][x].shift(Vector2(x, y) * runeSize)
 	grid[y][0] = tmp
-	grid[y][0].shift(Vector2(0, y) * runeSize)
+	if grid[y][0]:
+		grid[y][0].shift(Vector2(0, y) * runeSize)
 
 func requestMoveCursor(inputDirection):
 	if inputDirection == Vector2(-1, 0):
@@ -100,8 +106,6 @@ func checkForMatch():
 				break
 			matches.append(j)
 		if matches.size() >= 3:
-			print("matches")
-			print(matches)
 			scoreAndRemoveMatches(matches)
 			return
 
@@ -112,25 +116,84 @@ func scoreAndRemoveMatches(matches):
 		grid[boardSizeY / 2][i] = null
 
 func settleBoard():
-	print("settling")
 	var y = boardSizeY / 2
 	for x in range(boardSizeX):
-		print(grid[y][x])
 		if !grid[y][x]:
 			if grid[y-1][x]:
 				var i=1
-				while grid[y-i][x]:
+				while  y >= i && grid[y-i][x]:
 					grid[y-i+1][x] = grid[y-i][x]
 					grid[y-i+1][x].shift(Vector2(x, y-i+1) * runeSize)
 					i += 1
 				grid[y-i+1][x] = null
 			elif grid[y+1][x]:
 				var i=0
-				while grid[y+i+1][x]:
+				while  y+i+1 < boardSizeY && grid[y+i+1][x]:
 					grid[y+i][x] = grid[y+i+1][x]
 					grid[y+i][x].shift(Vector2(x, y+i) * runeSize)
 					i += 1
 				grid[y+i][x] = null
+
+func addRune(column, direction = Orientation.TOP):
+	var rune = createRune()
+	if direction == Orientation.TOP:
+		rune.position = Vector2(column, 0) * runeSize
+		var i = 0
+		while grid[i][column] == null && i < (boardSizeY / 2 + 2):
+			i += 1
+		i -= 1
+		grid[i][column] = rune
+		rune.shift(Vector2(column, i) * runeSize)
+		return
+	rune.position = Vector2(column, boardSizeY - 1) * runeSize
+	var i = 0
+	while grid[boardSizeY - 1 - i][column] == null && i < boardSizeY / 2:
+		i += 1
+	i -= 1
+	grid[boardSizeY - 1 - i][column] = rune
+	rune.shift(Vector2(column, boardSizeY - 1 - i) * runeSize)
+	return
+
+func checkForLoss():
+	var hits = 0
+	for x in range(boardSizeX):
+		if grid[0][x] != null:
+			hits += 1
+		if grid[boardSizeY - 1][x] != null:
+			hits += 1
+	if (hits == boardSizeX * 2):
+		print("game over")
+		return true
+	return false
+
+func getAvailableSlot():
+	if checkForLoss():
+		return
+		
+	var testSlots = range(boardSizeX * 2)
+	testSlots = shuffleList(testSlots)
+	var i = 0
+	var direction
+	var column
+	while i < boardSizeX * Orientation.size():
+		direction = testSlots[i] % Orientation.size()
+		column = testSlots[i] % boardSizeX
+		if direction == Orientation.TOP && !grid[0][column] || direction == Orientation.BOTTOM && !grid[boardSizeY-1][column]:
+			break
+		i += 1
+	return {
+		direction = direction,
+		column = column
+	}
+
+func shuffleList(list):
+    var shuffledList = [] 
+    var indexList = range(list.size())
+    for i in range(list.size()):
+        var x = randi() % indexList.size()
+        shuffledList.append(list[indexList[x]])
+        indexList.remove(x)
+    return shuffledList
 
 func debugDrawGrid():
 	for child in $DebugArea.get_children():
@@ -151,10 +214,10 @@ func _ready():
 	initGrid(Vector2(boardSizeX, boardInitSizeY))
 	debugDrawGrid()
 	updateCursor(cursorPos)
+	$RuneTrickleTimer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
+	$RuneTrickleTimer.start()
 
-func _process(delta):
-	if repositionCount != 0:
-		return
+func _input(ev):
 	if Input.is_action_just_pressed("ui_up"):
 		shiftColumnUp(cursorPos)
 	if Input.is_action_just_pressed("ui_down"):
@@ -163,6 +226,15 @@ func _process(delta):
 		shiftMiddleRowLeft()
 	if Input.is_action_just_pressed("ui_right"):
 		shiftMiddleRowRight()
+	if Input.is_action_just_pressed("ui_select"):
+		if $RuneTrickleTimer.is_stopped():
+			$RuneTrickleTimer.start()
+		else:
+			$RuneTrickleTimer.stop()
+
+func _process(delta):
+	if repositionCount != 0:
+		return
 	debugDrawGrid()
 
 func _on_rune_position_start():
@@ -173,3 +245,10 @@ func _on_rune_position_end():
 	if repositionCount == 0:
 		checkForMatch()
 		settleBoard()
+
+func _on_rune_trickle_timer_timeout():
+	if repositionCount != 0:
+		return
+	var availableSlot = getAvailableSlot()
+	if availableSlot:
+		addRune(availableSlot.column, availableSlot.direction)
