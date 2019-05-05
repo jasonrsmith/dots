@@ -217,24 +217,25 @@ func _ready():
 	$RuneTrickleTimer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
 	$RuneTrickleTimer.start()
 
-func _input(ev):
-	if Input.is_action_just_pressed("ui_up"):
-		shiftColumnUp(cursorPos)
-	if Input.is_action_just_pressed("ui_down"):
-		shiftColumnDown(cursorPos)
-	if Input.is_action_just_pressed("ui_left"):
-		shiftMiddleRowLeft()
-	if Input.is_action_just_pressed("ui_right"):
-		shiftMiddleRowRight()
-	if Input.is_action_just_pressed("ui_select"):
-		if $RuneTrickleTimer.is_stopped():
-			$RuneTrickleTimer.start()
-		else:
-			$RuneTrickleTimer.stop()
+func onInputUp():
+	shiftColumnUp(cursorPos)
+
+func onInputDown():
+	shiftColumnDown(cursorPos)
+
+func onInputLeft():
+	shiftMiddleRowLeft()
+
+func onInputRight():
+	shiftMiddleRowRight()
+
+func onInputSelect():
+	if $RuneTrickleTimer.is_stopped():
+		$RuneTrickleTimer.start()
+	else:
+		$RuneTrickleTimer.stop()
 
 func _process(delta):
-	if repositionCount != 0:
-		return
 	debugDrawGrid()
 
 func _on_rune_position_start():
@@ -242,9 +243,10 @@ func _on_rune_position_start():
 
 func _on_rune_position_end():
 	repositionCount -= 1
-	if repositionCount == 0:
-		checkForMatch()
-		settleBoard()
+	if repositionCount != 0:
+		return
+	checkForMatch()
+	settleBoard()
 
 func _on_rune_trickle_timer_timeout():
 	if repositionCount != 0:

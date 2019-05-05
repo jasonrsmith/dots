@@ -15,5 +15,5 @@ margin_bottom = 1102.0
 color = Color( 0.00784314, 0.105882, 0.290196, 0.576471 )
 
 [node name="PlayerBoard" parent="." instance=ExtResource( 2 )]
-position = Vector2( 370, 60 )
+position = Vector2( 840, 90 )
 
