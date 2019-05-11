@@ -1,4 +1,4 @@
-extends Node2D
+extends Position2D
 
 export (PackedScene) var Rune
 export (PackedScene) var DebugText
@@ -237,6 +237,16 @@ func onInputSelect():
 
 func _process(delta):
 	debugDrawGrid()
+	
+func _input(event):
+	if Input.is_action_just_pressed("ui_up"):
+		onInputUp()
+	if Input.is_action_just_pressed("ui_down"):
+		onInputDown()
+	if Input.is_action_just_pressed("ui_left"):
+		onInputLeft()
+	if Input.is_action_just_pressed("ui_right"):
+		onInputRight()
 
 func _on_rune_position_start():
 	repositionCount += 1
