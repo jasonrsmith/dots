@@ -1,9 +1,15 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Board.tscn" type="PackedScene" id=2]
 [ext_resource path="res://MainMenu.tscn" type="PackedScene" id=3]
-[ext_resource path="res://ConfirmationDialog.tscn" type="PackedScene" id=4]
+[ext_resource path="res://default_theme.tres" type="Theme" id=4]
+[ext_resource path="res://LeaveGameDialog.gd" type="Script" id=5]
+[ext_resource path="res://Acme-Regular.ttf" type="DynamicFontData" id=6]
+
+[sub_resource type="DynamicFont" id=1]
+size = 96
+font_data = ExtResource( 6 )
 
 [node name="Main" type="Node2D"]
 script = ExtResource( 1 )
@@ -22,8 +28,32 @@ margin_top = 0.0
 margin_right = 1889.0
 margin_bottom = 1087.0
 
-[node name="ConfirmationDialog" parent="." instance=ExtResource( 4 )]
-visible = false
-margin_right = 1893.0
-margin_bottom = 1083.0
+[node name="LeaveGameDialog" type="ConfirmationDialog" parent="."]
+visible = true
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -563.5
+margin_top = -225.0
+margin_right = 563.5
+margin_bottom = 225.0
+theme = ExtResource( 4 )
+popup_exclusive = true
+window_title = ""
+script = ExtResource( 5 )
+
+[node name="LeaveGameLabel" type="Label" parent="LeaveGameDialog"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 100.0
+margin_top = 100.0
+margin_right = -100.0
+margin_bottom = -279.0
+theme = ExtResource( 4 )
+custom_fonts/font = SubResource( 1 )
+text = "Wanna leave them dots?"
+align = 1
+
+[node name="PlayScreen" type="Node2D" parent="."]
 

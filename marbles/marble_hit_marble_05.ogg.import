@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/marble_hit_marble_05.ogg-477f4374fa9fe7e2359acad73babd183.oggstr"
+
+[deps]
+
+source_file="res://marbles/marble_hit_marble_05.ogg"
+dest_files=[ "res://.import/marble_hit_marble_05.ogg-477f4374fa9fe7e2359acad73babd183.oggstr" ]
+
+[params]
+
+loop=false
+loop_offset=0

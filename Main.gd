@@ -23,4 +23,4 @@ func _on_menu_item_selected(menuItem):
 
 func _ready():
 	$MainMenu.connect('menu_item_selected', self, '_on_menu_item_selected')
-
+	$LeaveGameDialog.popup()

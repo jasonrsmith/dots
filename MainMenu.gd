@@ -24,7 +24,7 @@ func _ready():
 	self.menuItems = find_node("Menu").get_children()
 	self.selectedItem = 0
 
-func _input(ev):
+func _unhandled_input(ev):
 	if Input.is_action_just_pressed("ui_up"):
 		self.cursorUp()
 	if Input.is_action_just_pressed("ui_down"):
