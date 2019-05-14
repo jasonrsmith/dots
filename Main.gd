@@ -1,17 +1,21 @@
 extends Node2D
 
-export (PackedScene) var player_board
+export (PackedScene) var play_screen
 
-var player_board_instance
+var play_screen_instance
+
+func leaveCurrentGame():
+	remove_child(play_screen_instance)
+	find_node("MainMenu").visible = true
 
 func startNewGame():
 	find_node("MainMenu").visible = false
-	player_board_instance = player_board.instance()
-	add_child(player_board_instance)
+	play_screen_instance = play_screen.instance()
+	add_child(play_screen_instance)
+	play_screen_instance.connect("leave_screen", self, "leaveCurrentGame")
 
 func _input(ev):
 	if Input.is_action_just_pressed("ui_toggle_fullscreen"):
-		print("fullscreen")
 		OS.window_fullscreen = !OS.window_fullscreen
 
 func _on_menu_item_selected(menuItem):
@@ -23,4 +27,3 @@ func _on_menu_item_selected(menuItem):
 
 func _ready():
 	$MainMenu.connect('menu_item_selected', self, '_on_menu_item_selected')
-	$LeaveGameDialog.popup()

@@ -25,6 +25,8 @@ func _ready():
 	self.selectedItem = 0
 
 func _unhandled_input(ev):
+	if !visible:
+		return
 	if Input.is_action_just_pressed("ui_up"):
 		self.cursorUp()
 	if Input.is_action_just_pressed("ui_down"):

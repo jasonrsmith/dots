@@ -1,0 +1,36 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://default_theme.tres" type="Theme" id=1]
+[ext_resource path="res://LeaveGameDialog.gd" type="Script" id=2]
+[ext_resource path="res://Acme-Regular.ttf" type="DynamicFontData" id=3]
+
+[sub_resource type="DynamicFont" id=1]
+size = 96
+font_data = ExtResource( 3 )
+
+[node name="LeaveGameDialog" type="ConfirmationDialog"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -563.5
+margin_top = -225.0
+margin_right = 563.5
+margin_bottom = 225.0
+theme = ExtResource( 1 )
+popup_exclusive = true
+window_title = ""
+script = ExtResource( 2 )
+
+[node name="LeaveGameLabel" type="Label" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 100.0
+margin_top = 100.0
+margin_right = -100.0
+margin_bottom = -279.0
+theme = ExtResource( 1 )
+custom_fonts/font = SubResource( 1 )
+text = "Wanna leave them dots?"
+align = 1
+

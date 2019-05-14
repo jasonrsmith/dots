@@ -32,7 +32,7 @@ func initGrid(size):
 
 func createRune():
 	var rune = Rune.instance()
-	add_child(rune)
+	$Dots.add_child(rune)
 	rune.connect("reposition_start", self, "_on_rune_position_start")
 	rune.connect("reposition_end", self, "_on_rune_position_end")
 	return rune
@@ -238,7 +238,7 @@ func onInputSelect():
 func _process(delta):
 	debugDrawGrid()
 	
-func _input(event):
+func _unhandled_input(event):
 	if Input.is_action_just_pressed("ui_up"):
 		onInputUp()
 	if Input.is_action_just_pressed("ui_down"):

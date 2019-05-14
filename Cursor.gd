@@ -22,9 +22,7 @@ func moveTo(targetPosition):
 	$Tween.interpolate_property(self, "position", position, targetPosition, 0.2, Tween.TRANS_LINEAR, Tween.EASE_IN)
 	$Tween.start()
 
-func _process(delta):
-	updateThrob(delta)
-	
+func _unhandled_input(event):
 	var inputDirection = getInputDirection()
 	if !inputDirection:
 		return
@@ -34,3 +32,6 @@ func _process(delta):
 		moveTo(targetPosition)
 	else:
 		bump(inputDirection)
+
+func _process(delta):
+	updateThrob(delta)

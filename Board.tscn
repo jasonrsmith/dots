@@ -17,12 +17,13 @@ boardSizeY = 15
 boardInitSizeY = 5
 runeSize = 64
 
+[node name="Dots" type="Position2D" parent="."]
+
 [node name="DebugArea" type="Node2D" parent="."]
 visible = false
 z_index = 1
 
 [node name="Cursor" parent="." instance=ExtResource( 4 )]
-z_index = 100
 
 [node name="SuccessSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource( 5 )
