@@ -1,5 +1,7 @@
 extends Position2D
 
+signal match_removed (count, rune_type, is_combo)
+
 export (PackedScene) var Rune
 export (PackedScene) var DebugText
 
@@ -7,6 +9,7 @@ export (int) var boardSizeX
 export (int) var boardSizeY
 export (int) var boardInitSizeY
 export (int) var runeSize
+export (bool) var player_controlled
 
 enum Orientation {TOP, BOTTOM}
 
@@ -111,9 +114,11 @@ func checkForMatch():
 
 func scoreAndRemoveMatches(matches):
 	$SuccessSound.play()
+	var rune_type = grid[boardSizeY / 2][matches[0]].colorType
 	for i in matches:
 		grid[boardSizeY / 2][i].remove()
 		grid[boardSizeY / 2][i] = null
+	emit_signal("match_removed", matches.size(), rune_type, false)
 
 func settleBoard():
 	var y = boardSizeY / 2
@@ -239,6 +244,8 @@ func _process(delta):
 	debugDrawGrid()
 	
 func _unhandled_input(event):
+	if !player_controlled:
+		return
 	if Input.is_action_just_pressed("ui_up"):
 		onInputUp()
 	if Input.is_action_just_pressed("ui_down"):
@@ -247,6 +254,7 @@ func _unhandled_input(event):
 		onInputLeft()
 	if Input.is_action_just_pressed("ui_right"):
 		onInputRight()
+	$Cursor.checkForInput()
 
 func _on_rune_position_start():
 	repositionCount += 1

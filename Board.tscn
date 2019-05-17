@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://Board.gd" type="Script" id=1]
 [ext_resource path="res://Rune.tscn" type="PackedScene" id=2]
@@ -6,6 +6,10 @@
 [ext_resource path="res://Cursor.tscn" type="PackedScene" id=4]
 [ext_resource path="res://success.ogg" type="AudioStream" id=5]
 [ext_resource path="res://dotgrid.png" type="Texture" id=6]
+[ext_resource path="res://ScoreKeeper.gd" type="Script" id=7]
+[ext_resource path="res://ActiveRune.gd" type="Script" id=8]
+[ext_resource path="res://marbles/marble-blue.png" type="Texture" id=9]
+[ext_resource path="res://default_theme.tres" type="Theme" id=10]
 
 [node name="Board" type="Position2D"]
 position = Vector2( 840, 90 )
@@ -29,9 +33,49 @@ z_index = 1
 stream = ExtResource( 5 )
 
 [node name="RuneTrickleTimer" type="Timer" parent="."]
+wait_time = 2.0
 
 [node name="dotgrid" type="Sprite" parent="."]
 texture = ExtResource( 6 )
 centered = false
 offset = Vector2( -96, -46 )
+
+[node name="ScoreKeeper" type="Node" parent="."]
+script = ExtResource( 7 )
+
+[node name="ActiveRune" type="Position2D" parent="."]
+position = Vector2( -143.307, -29.2957 )
+script = ExtResource( 8 )
+Rune = ExtResource( 2 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ActiveRune"]
+margin_right = 64.0
+margin_bottom = 126.0
+custom_constants/separation = 0
+alignment = 1
+
+[node name="Position2D" type="Position2D" parent="ActiveRune/VBoxContainer"]
+position = Vector2( 32, 32 )
+
+[node name="Rune" parent="ActiveRune/VBoxContainer/Position2D" instance=ExtResource( 2 )]
+
+[node name="MarginContainer" type="MarginContainer" parent="ActiveRune/VBoxContainer"]
+margin_right = 64.0
+margin_bottom = 64.0
+custom_constants/margin_left = 64
+custom_constants/margin_bottom = 64
+
+[node name="TextureRect" type="TextureRect" parent="ActiveRune/VBoxContainer"]
+visible = false
+margin_right = 64.0
+margin_bottom = 64.0
+texture = ExtResource( 9 )
+
+[node name="ActiveRuneCountLabel" type="Label" parent="ActiveRune/VBoxContainer"]
+margin_top = 64.0
+margin_right = 64.0
+margin_bottom = 126.0
+theme = ExtResource( 10 )
+text = "1"
+align = 1
 

@@ -1,9 +1,10 @@
 extends Node2D
 
-export (int) var size
-
 signal reposition_start
 signal reposition_end
+
+export (int) var size
+export (int, "BLUE", "BROWN", "PURPLE", "RED", "TEAL") var colorType setget setColorType
 
 const RUNE_TYPES = [
   preload("res://marbles/marble-blue.png"),
@@ -12,8 +13,6 @@ const RUNE_TYPES = [
   preload("res://marbles/marble-red.png"),
   preload("res://marbles/marble-teal.png"),
 ]
-
-export (int, "BLUE", "BROWN", "PURPLE", "RED", "TEAL") var colorType setget setColorType
 
 func setColorType(newColorType):
 	if newColorType != null:

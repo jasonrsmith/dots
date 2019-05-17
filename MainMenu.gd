@@ -33,3 +33,5 @@ func _unhandled_input(ev):
 		self.cursorDown()
 	if Input.is_action_just_pressed("ui_accept"):
 		self.acceptSelection()
+	if Input.is_action_just_pressed("ui_cancel"):
+		get_tree().quit()
