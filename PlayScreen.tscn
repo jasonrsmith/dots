@@ -9,7 +9,7 @@ script = ExtResource( 1 )
 
 [node name="PlayerBoard" parent="." instance=ExtResource( 2 )]
 position = Vector2( 256, 90 )
-player_controlled = true
+is_player_controlled = true
 
 [node name="OpponentBoard" parent="." instance=ExtResource( 2 )]
 position = Vector2( 1404, 90 )

@@ -1,11 +1,12 @@
 extends Position2D
 class_name Board
 
-onready var cursor: Node2D = $Cursor
+onready var cursor: Cursor = $Cursor
 onready var debug_area: Node2D = $DebugArea
-onready var dots: Position2D = $Dots
+onready var dot_area: Position2D = $Dots
 onready var rune_trickle_timer: Timer = $RuneTrickleTimer
 onready var success_sound: AudioStreamPlayer2D = $SuccessSound
+onready var active_rune: ActiveRune = $ActiveRune
 
 signal active_rune_cleared (count)
 signal match_removed (count, rune_type, is_combo)
@@ -16,86 +17,125 @@ export (int) var board_size_x
 export (int) var board_size_y
 export (int) var board_init_size_y
 export (int) var rune_size
-export (bool) var player_controlled
+export (bool) var is_player_controlled
 
 enum Orientation {TOP, BOTTOM}
 
-var _cursor_pos = 0
-var grid = []
-var reposition_count = 0
-var is_board_action_made_since_last_score = false
+var _cursor_pos := 0
+var _grid := []
+var _reposition_count := 0
+var _is_action_made_since_last_score := false
 
-func initGrid(size):
-	var startCellY = (board_size_y / 2) - (board_init_size_y / 2)
+func _ready() -> void:
+	_init_grid(Vector2(board_size_x, board_init_size_y))
+	_debug_draw_grid()
+	_update_cursor(_cursor_pos)
+	rune_trickle_timer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
+	rune_trickle_timer.start()
+	active_rune.connect('active_rune_cleared', self, '_on_active_rune_cleared')
+
+
+func _process(delta: float) -> void:
+	_debug_draw_grid()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if !is_player_controlled:
+		return
+	if Input.is_action_just_pressed("ui_up"):
+		_on_input_up()
+		_is_action_made_since_last_score = true
+	if Input.is_action_just_pressed("ui_down"):
+		_on_input_down()
+		_is_action_made_since_last_score = true
+	if Input.is_action_just_pressed("ui_left"):
+		_on_input_left()
+		_is_action_made_since_last_score = true
+	if Input.is_action_just_pressed("ui_right"):
+		_on_input_right()
+		_is_action_made_since_last_score = true
+	var has_cursor_moved = cursor.check_for_input()
+	_is_action_made_since_last_score = has_cursor_moved || _is_action_made_since_last_score
+
+
+func _init_grid(size: Vector2) -> void:
+	var start_cell_y: int = (board_size_y / 2) - (board_init_size_y / 2)
 	
 	for y in range (board_size_y):
-		grid.append([])
+		_grid.append([])
 		for x in range (board_size_x):
-			grid[y].append(null)
+			_grid[y].append(null)
 	
 	for y in range (size.y):
-		var newPos = Vector2(0, y + startCellY)
+		var new_pos = Vector2(0, y + start_cell_y)
 		for x in range (size.x):
-			newPos.x = x
-			var rune = createRune()
-			rune.position = (newPos * rune_size)
-			grid[y + startCellY][x] = rune
+			new_pos.x = x
+			var rune = _create_rune()
+			rune.position = (new_pos * rune_size)
+			_grid[y + start_cell_y][x] = rune
 
-func createRune():
+
+func _create_rune() -> Rune:
 	var rune = Rune.instance()
-	dots.add_child(rune)
+	dot_area.add_child(rune)
 	rune.connect("reposition_start", self, "_on_rune_position_start")
 	rune.connect("reposition_end", self, "_on_rune_position_end")
 	return rune
 
-func updateCursor(_cursor_pos):
+
+func _update_cursor(_cursor_pos):
 	cursor.position = Vector2(_cursor_pos, board_size_y / 2) * rune_size
-	
+
+
 func shiftColumnUp(_cursor_pos):
-	if grid[0][_cursor_pos] != null:
+	if _grid[0][_cursor_pos] != null:
 		return
-	if grid[(board_size_y / 2) + 1][_cursor_pos] == null:
+	if _grid[(board_size_y / 2) + 1][_cursor_pos] == null:
 		return
 	for y in range (board_size_y - 1):
-		grid[y][_cursor_pos] = grid[y+1][_cursor_pos]
-		if grid[y][_cursor_pos] != null:
-			grid[y][_cursor_pos].shift(Vector2(_cursor_pos, y) * rune_size)
-	grid[board_size_y - 1][_cursor_pos] = null
+		_grid[y][_cursor_pos] = _grid[y+1][_cursor_pos]
+		if _grid[y][_cursor_pos] != null:
+			_grid[y][_cursor_pos].shift(Vector2(_cursor_pos, y) * rune_size)
+	_grid[board_size_y - 1][_cursor_pos] = null
+
 
 func shiftColumnDown(_cursor_pos):
-	if grid[board_size_y - 1][_cursor_pos] != null:
+	if _grid[board_size_y - 1][_cursor_pos] != null:
 		return
-	if grid[(board_size_y / 2) - 1][_cursor_pos] == null:
+	if _grid[(board_size_y / 2) - 1][_cursor_pos] == null:
 		return
 	for y in range (board_size_y - 1):
 		y = board_size_y - y - 1
-		grid[y][_cursor_pos] = grid[y - 1][_cursor_pos]
-		if grid[y][_cursor_pos] != null:
-			grid[y][_cursor_pos].shift(Vector2(_cursor_pos, y) * rune_size)
-	grid[0][_cursor_pos] = null
+		_grid[y][_cursor_pos] = _grid[y - 1][_cursor_pos]
+		if _grid[y][_cursor_pos] != null:
+			_grid[y][_cursor_pos].shift(Vector2(_cursor_pos, y) * rune_size)
+	_grid[0][_cursor_pos] = null
+
 
 func shiftMiddleRowLeft():
-	var y = board_size_y / 2
-	var tmp = grid[y][0]
+	var y: int = board_size_y / 2
+	var tmp: Rune = _grid[y][0]
 	for x in range(board_size_x-1):
-		grid[y][x] = grid[y][x + 1]
-		if grid[y][x]:
-			grid[y][x].shift(Vector2(x, y) * rune_size)
-	grid[y][board_size_x-1] = tmp
-	if grid[y][board_size_x-1]:
-		grid[y][board_size_x-1].shift(Vector2(board_size_x-1, y) * rune_size)
+		_grid[y][x] = _grid[y][x + 1]
+		if _grid[y][x]:
+			_grid[y][x].shift(Vector2(x, y) * rune_size)
+	_grid[y][board_size_x-1] = tmp
+	if _grid[y][board_size_x-1]:
+		_grid[y][board_size_x-1].shift(Vector2(board_size_x-1, y) * rune_size)
 
-func shiftMiddleRowRight():
-	var y = board_size_y / 2
-	var tmp = grid[y][board_size_x - 1]
+
+func _shift_middle_row_right() -> void:
+	var y: int = board_size_y / 2
+	var tmp: Rune = _grid[y][board_size_x - 1]
 	for x in range(board_size_x - 1):
 		x = board_size_x - x - 1
-		grid[y][x] = grid[y][x - 1]
-		if grid[y][x]:
-			grid[y][x].shift(Vector2(x, y) * rune_size)
-	grid[y][0] = tmp
-	if grid[y][0]:
-		grid[y][0].shift(Vector2(0, y) * rune_size)
+		_grid[y][x] = _grid[y][x - 1]
+		if _grid[y][x]:
+			_grid[y][x].shift(Vector2(x, y) * rune_size)
+	_grid[y][0] = tmp
+	if _grid[y][0]:
+		_grid[y][0].shift(Vector2(0, y) * rune_size)
+
 
 func requestMoveCursor(inputDirection):
 	if inputDirection == Vector2(-1, 0):
@@ -113,67 +153,67 @@ func checkForMatch():
 	for i in range(board_size_x):
 		var matches = [i]
 		for j in range(i + 1, board_size_x):
-			if !grid[y][i] || !grid[y][j] || grid[y][i].colorType != grid[y][j].colorType:
+			if !_grid[y][i] || !_grid[y][j] || _grid[y][i].colorType != _grid[y][j].colorType:
 				break
 			matches.append(j)
 		if matches.size() >= 3:
 			scoreAndRemoveMatches(matches)
-			is_board_action_made_since_last_score = false
+			_is_action_made_since_last_score = false
 			return
 
 func scoreAndRemoveMatches(matches):
 	success_sound.play()
-	var rune_type = grid[board_size_y / 2][matches[0]].colorType
+	var rune_type = _grid[board_size_y / 2][matches[0]].colorType
 	for i in matches:
-		grid[board_size_y / 2][i].remove()
-		grid[board_size_y / 2][i] = null
-	emit_signal("match_removed", matches.size(), rune_type, !is_board_action_made_since_last_score)
+		_grid[board_size_y / 2][i].remove()
+		_grid[board_size_y / 2][i] = null
+	emit_signal("match_removed", matches.size(), rune_type, !_is_action_made_since_last_score)
 
 func settleBoard():
 	var y = board_size_y / 2
 	for x in range(board_size_x):
-		if !grid[y][x]:
-			if grid[y-1][x]:
+		if !_grid[y][x]:
+			if _grid[y-1][x]:
 				var i=1
-				while  y >= i && grid[y-i][x]:
-					grid[y-i+1][x] = grid[y-i][x]
-					grid[y-i+1][x].shift(Vector2(x, y-i+1) * rune_size)
+				while  y >= i && _grid[y-i][x]:
+					_grid[y-i+1][x] = _grid[y-i][x]
+					_grid[y-i+1][x].shift(Vector2(x, y-i+1) * rune_size)
 					i += 1
-				grid[y-i+1][x] = null
-			elif grid[y+1][x]:
+				_grid[y-i+1][x] = null
+			elif _grid[y+1][x]:
 				var i=0
-				while  y+i+1 < board_size_y && grid[y+i+1][x]:
-					grid[y+i][x] = grid[y+i+1][x]
-					grid[y+i][x].shift(Vector2(x, y+i) * rune_size)
+				while  y+i+1 < board_size_y && _grid[y+i+1][x]:
+					_grid[y+i][x] = _grid[y+i+1][x]
+					_grid[y+i][x].shift(Vector2(x, y+i) * rune_size)
 					i += 1
-				grid[y+i][x] = null
+				_grid[y+i][x] = null
 
 func addRune(column, direction = Orientation.TOP):
-	var rune = createRune()
+	var rune = _create_rune()
 	if direction == Orientation.TOP:
 		rune.position = Vector2(column, 0) * rune_size
 		var i = 0
-		while grid[i][column] == null && i < (board_size_y / 2 + 2):
+		while _grid[i][column] == null && i < (board_size_y / 2 + 2):
 			i += 1
 		i -= 1
-		grid[i][column] = rune
+		_grid[i][column] = rune
 		rune.shift(Vector2(column, i) * rune_size)
 		return
 	rune.position = Vector2(column, board_size_y - 1) * rune_size
 	var i = 0
-	while grid[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
+	while _grid[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
 		i += 1
 	i -= 1
-	grid[board_size_y - 1 - i][column] = rune
+	_grid[board_size_y - 1 - i][column] = rune
 	rune.shift(Vector2(column, board_size_y - 1 - i) * rune_size)
 	return
 
 func checkForLoss():
 	var hits = 0
 	for x in range(board_size_x):
-		if grid[0][x] != null:
+		if _grid[0][x] != null:
 			hits += 1
-		if grid[board_size_y - 1][x] != null:
+		if _grid[board_size_y - 1][x] != null:
 			hits += 1
 	if (hits == board_size_x * 2):
 		print("game over")
@@ -192,13 +232,14 @@ func getAvailableSlot():
 	while i < board_size_x * Orientation.size():
 		direction = testSlots[i] % Orientation.size()
 		column = testSlots[i] % board_size_x
-		if direction == Orientation.TOP && !grid[0][column] || direction == Orientation.BOTTOM && !grid[board_size_y-1][column]:
+		if direction == Orientation.TOP && !_grid[0][column] || direction == Orientation.BOTTOM && !_grid[board_size_y-1][column]:
 			break
 		i += 1
 	return {
 		direction = direction,
 		column = column
 	}
+
 
 func shuffleList(list):
     var shuffledList = [] 
@@ -209,7 +250,8 @@ func shuffleList(list):
         indexList.remove(x)
     return shuffledList
 
-func debugDrawGrid():
+
+func _debug_draw_grid():
 	for child in debug_area.get_children():
 		child.queue_free()
 	for x in range(board_size_x):
@@ -218,34 +260,32 @@ func debugDrawGrid():
 			label.text = str(x) + "," + str(y)
 			label.text += "\n"
 			label.text += \
-				str(grid[y][x].colorType) if grid[y][x] \
+				str(_grid[y][x].colorType) if _grid[y][x] \
 				else "null"
 			label.margin_top = y * rune_size
 			label.margin_left = x * rune_size
 			debug_area.add_child(label)
 
-func _ready():
-	initGrid(Vector2(board_size_x, board_init_size_y))
-	debugDrawGrid()
-	updateCursor(_cursor_pos)
-	rune_trickle_timer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
-	rune_trickle_timer.start()
-	$ActiveRune.connect('active_rune_cleared', self, 'on_active_rune_cleared')
 
-func on_active_rune_cleared(count):
+func _on_active_rune_cleared(count):
 	pass
 
-func onInputUp():
+
+func _on_input_up():
 	shiftColumnUp(_cursor_pos)
 
-func onInputDown():
+
+func _on_input_down():
 	shiftColumnDown(_cursor_pos)
 
-func onInputLeft():
+
+func _on_input_left():
 	shiftMiddleRowLeft()
 
-func onInputRight():
-	shiftMiddleRowRight()
+
+func _on_input_right():
+	_shift_middle_row_right()
+
 
 func onInputSelect():
 	if rune_trickle_timer.is_stopped():
@@ -253,48 +293,32 @@ func onInputSelect():
 	else:
 		rune_trickle_timer.stop()
 
-func _process(delta):
-	debugDrawGrid()
-
-func _unhandled_input(event):
-	if !player_controlled:
-		return
-	if Input.is_action_just_pressed("ui_up"):
-		onInputUp()
-		is_board_action_made_since_last_score = true
-	if Input.is_action_just_pressed("ui_down"):
-		onInputDown()
-		is_board_action_made_since_last_score = true
-	if Input.is_action_just_pressed("ui_left"):
-		onInputLeft()
-		is_board_action_made_since_last_score = true
-	if Input.is_action_just_pressed("ui_right"):
-		onInputRight()
-		is_board_action_made_since_last_score = true
-	var has_cursor_moved = cursor.checkForInput()
-	is_board_action_made_since_last_score = has_cursor_moved || is_board_action_made_since_last_score
-
-func _on_rune_position_start():
-	reposition_count += 1
-
-func _on_rune_position_end():
-	reposition_count -= 1
-	if reposition_count != 0:
-		return
-	checkForMatch()
-	settleBoard()
 
 var rune_drop_queue = []
 func add_to_rune_drop_queue(count):
 	rune_drop_queue.push_back(count)
 
-func _on_rune_trickle_timer_timeout():
-	if reposition_count != 0 || rune_drop_queue.size() == 0:
-		return
-	drop_runes(rune_drop_queue.pop_front())
 
 func drop_runes(count):
 	for i in range(count):
 		var availableSlot = getAvailableSlot()
 		if availableSlot:
 			addRune(availableSlot.column, availableSlot.direction)
+
+
+func _on_rune_trickle_timer_timeout():
+	if _reposition_count != 0 || rune_drop_queue.size() == 0:
+		return
+	drop_runes(rune_drop_queue.pop_front())
+
+
+func _on_rune_position_start():
+	_reposition_count += 1
+
+
+func _on_rune_position_end():
+	_reposition_count -= 1
+	if _reposition_count != 0:
+		return
+	checkForMatch()
+	settleBoard()

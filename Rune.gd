@@ -1,4 +1,5 @@
 extends Node2D
+class_name Rune
 
 signal reposition_start
 signal reposition_end

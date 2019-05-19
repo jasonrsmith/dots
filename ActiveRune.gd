@@ -1,4 +1,5 @@
 extends Position2D
+class_name ActiveRune
 
 signal active_rune_cleared (count)
 

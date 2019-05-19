@@ -10,12 +10,30 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Position2D",
+"class": "ActiveRune",
+"language": "GDScript",
+"path": "res://ActiveRune.gd"
+}, {
+"base": "Position2D",
 "class": "Board",
 "language": "GDScript",
 "path": "res://Board.gd"
+}, {
+"base": "Node2D",
+"class": "Cursor",
+"language": "GDScript",
+"path": "res://Cursor.gd"
+}, {
+"base": "Node2D",
+"class": "Rune",
+"language": "GDScript",
+"path": "res://Rune.gd"
 } ]
 _global_script_class_icons={
-"Board": ""
+"ActiveRune": "",
+"Board": "",
+"Cursor": "",
+"Rune": ""
 }
 
 [application]

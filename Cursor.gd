@@ -1,4 +1,5 @@
 extends Node2D
+class_name Cursor
 
 onready var Board = get_parent()
 
@@ -22,7 +23,7 @@ func moveTo(targetPosition):
 	$Tween.interpolate_property(self, "position", position, targetPosition, 0.2, Tween.TRANS_LINEAR, Tween.EASE_IN)
 	$Tween.start()
 
-func checkForInput():
+func check_for_input():
 	var inputDirection = getInputDirection()
 	if !inputDirection:
 		return false
