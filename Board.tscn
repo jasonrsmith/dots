@@ -1,8 +1,8 @@
 [gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://Board.gd" type="Script" id=1]
-[ext_resource path="res://Rune.tscn" type="PackedScene" id=2]
-[ext_resource path="res://DebugText.tscn" type="PackedScene" id=3]
+[ext_resource path="res://DebugText.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Rune.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Cursor.tscn" type="PackedScene" id=4]
 [ext_resource path="res://success.ogg" type="AudioStream" id=5]
 [ext_resource path="res://dotgrid.png" type="Texture" id=6]
@@ -14,8 +14,8 @@
 [node name="Board" type="Position2D"]
 position = Vector2( 840, 90 )
 script = ExtResource( 1 )
-Rune = ExtResource( 2 )
-DebugText = ExtResource( 3 )
+DebugText = ExtResource( 2 )
+Rune = ExtResource( 3 )
 boardSizeX = 5
 boardSizeY = 15
 boardInitSizeY = 5
@@ -46,7 +46,7 @@ script = ExtResource( 7 )
 [node name="ActiveRune" type="Position2D" parent="."]
 position = Vector2( -143.307, -29.2957 )
 script = ExtResource( 8 )
-Rune = ExtResource( 2 )
+Rune = ExtResource( 3 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ActiveRune"]
 margin_right = 64.0
@@ -57,7 +57,7 @@ alignment = 1
 [node name="Position2D" type="Position2D" parent="ActiveRune/VBoxContainer"]
 position = Vector2( 32, 32 )
 
-[node name="Rune" parent="ActiveRune/VBoxContainer/Position2D" instance=ExtResource( 2 )]
+[node name="Rune" parent="ActiveRune/VBoxContainer/Position2D" instance=ExtResource( 3 )]
 
 [node name="MarginContainer" type="MarginContainer" parent="ActiveRune/VBoxContainer"]
 margin_right = 64.0

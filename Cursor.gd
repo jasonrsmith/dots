@@ -25,13 +25,14 @@ func moveTo(targetPosition):
 func checkForInput():
 	var inputDirection = getInputDirection()
 	if !inputDirection:
-		return
+		return false
 
 	var targetPosition = Board.requestMoveCursor(inputDirection)
 	if targetPosition:
 		moveTo(targetPosition)
 	else:
 		bump(inputDirection)
+	return true
 
 func _process(delta):
 	updateThrob(delta)

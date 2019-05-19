@@ -1,9 +1,17 @@
 extends Position2D
+class_name Board
 
+onready var cursor: Node2D = $Cursor
+onready var debug_area: Node2D = $DebugArea
+onready var dots: Position2D = $Dots
+onready var rune_trickle_timer: Timer = $RuneTrickleTimer
+onready var success_sound: AudioStreamPlayer2D = $SuccessSound
+
+signal active_rune_cleared (count)
 signal match_removed (count, rune_type, is_combo)
 
-export (PackedScene) var Rune
 export (PackedScene) var DebugText
+export (PackedScene) var Rune
 
 export (int) var boardSizeX
 export (int) var boardSizeY
@@ -16,6 +24,7 @@ enum Orientation {TOP, BOTTOM}
 var cursorPos = 0
 var grid = []
 var repositionCount = 0
+var is_board_action_made_since_last_score = false
 
 func initGrid(size):
 	var startCellY = (boardSizeY / 2) - (boardInitSizeY / 2)
@@ -35,13 +44,13 @@ func initGrid(size):
 
 func createRune():
 	var rune = Rune.instance()
-	$Dots.add_child(rune)
+	dots.add_child(rune)
 	rune.connect("reposition_start", self, "_on_rune_position_start")
 	rune.connect("reposition_end", self, "_on_rune_position_end")
 	return rune
 
 func updateCursor(cursorPos):
-	$Cursor.position = Vector2(cursorPos, boardSizeY / 2) * runeSize
+	cursor.position = Vector2(cursorPos, boardSizeY / 2) * runeSize
 	
 func shiftColumnUp(cursorPos):
 	if grid[0][cursorPos] != null:
@@ -110,15 +119,16 @@ func checkForMatch():
 			matches.append(j)
 		if matches.size() >= 3:
 			scoreAndRemoveMatches(matches)
+			is_board_action_made_since_last_score = false
 			return
 
 func scoreAndRemoveMatches(matches):
-	$SuccessSound.play()
+	success_sound.play()
 	var rune_type = grid[boardSizeY / 2][matches[0]].colorType
 	for i in matches:
 		grid[boardSizeY / 2][i].remove()
 		grid[boardSizeY / 2][i] = null
-	emit_signal("match_removed", matches.size(), rune_type, false)
+	emit_signal("match_removed", matches.size(), rune_type, !is_board_action_made_since_last_score)
 
 func settleBoard():
 	var y = boardSizeY / 2
@@ -201,7 +211,7 @@ func shuffleList(list):
     return shuffledList
 
 func debugDrawGrid():
-	for child in $DebugArea.get_children():
+	for child in debug_area.get_children():
 		child.queue_free()
 	for x in range(boardSizeX):
 		for y in range(boardSizeY):
@@ -213,14 +223,18 @@ func debugDrawGrid():
 				else "null"
 			label.margin_top = y * runeSize
 			label.margin_left = x * runeSize
-			$DebugArea.add_child(label)
+			debug_area.add_child(label)
 
 func _ready():
 	initGrid(Vector2(boardSizeX, boardInitSizeY))
 	debugDrawGrid()
 	updateCursor(cursorPos)
-	$RuneTrickleTimer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
-	$RuneTrickleTimer.start()
+	rune_trickle_timer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
+	rune_trickle_timer.start()
+	$ActiveRune.connect('active_rune_cleared', self, 'on_active_rune_cleared')
+
+func on_active_rune_cleared(count):
+	pass
 
 func onInputUp():
 	shiftColumnUp(cursorPos)
@@ -235,26 +249,31 @@ func onInputRight():
 	shiftMiddleRowRight()
 
 func onInputSelect():
-	if $RuneTrickleTimer.is_stopped():
-		$RuneTrickleTimer.start()
+	if rune_trickle_timer.is_stopped():
+		rune_trickle_timer.start()
 	else:
-		$RuneTrickleTimer.stop()
+		rune_trickle_timer.stop()
 
 func _process(delta):
 	debugDrawGrid()
-	
+
 func _unhandled_input(event):
 	if !player_controlled:
 		return
 	if Input.is_action_just_pressed("ui_up"):
 		onInputUp()
+		is_board_action_made_since_last_score = true
 	if Input.is_action_just_pressed("ui_down"):
 		onInputDown()
+		is_board_action_made_since_last_score = true
 	if Input.is_action_just_pressed("ui_left"):
 		onInputLeft()
+		is_board_action_made_since_last_score = true
 	if Input.is_action_just_pressed("ui_right"):
 		onInputRight()
-	$Cursor.checkForInput()
+		is_board_action_made_since_last_score = true
+	var has_cursor_moved = cursor.checkForInput()
+	is_board_action_made_since_last_score = has_cursor_moved || is_board_action_made_since_last_score
 
 func _on_rune_position_start():
 	repositionCount += 1
@@ -266,9 +285,17 @@ func _on_rune_position_end():
 	checkForMatch()
 	settleBoard()
 
+var rune_drop_queue = []
+func add_to_rune_drop_queue(count):
+	rune_drop_queue.push_back(count)
+
 func _on_rune_trickle_timer_timeout():
-	if repositionCount != 0:
+	if repositionCount != 0 || rune_drop_queue.size() == 0:
 		return
-	var availableSlot = getAvailableSlot()
-	if availableSlot:
-		addRune(availableSlot.column, availableSlot.direction)
+	drop_runes(rune_drop_queue.pop_front())
+
+func drop_runes(count):
+	for i in range(count):
+		var availableSlot = getAvailableSlot()
+		if availableSlot:
+			addRune(availableSlot.column, availableSlot.direction)
