@@ -1,39 +1,51 @@
 extends Node2D
 class_name Cursor
 
-onready var Board = get_parent()
+onready var move_tween: Tween = $MoveTween
 
-var throb_dir = -1.0
+var _throb_dir: = -1.0
+var _board
 
-func bump(inputDirection):
+func initialize(board) -> Cursor:
+	_board = board
+	return self
+
+
+func _process(delta) -> void:
+	_update_throb(delta)
+
+
+func check_for_input() -> bool:
+	var input_direction = _get_input_direction()
+	if !input_direction:
+		return false
+
+	var targetPosition = _board.request_move_cursor(input_direction)
+	if targetPosition:
+		_move_to(targetPosition)
+	else:
+		_bump(input_direction)
+	return true
+
+
+func _bump(input_direction):
 	print("bump")
 
-func getInputDirection():
+
+func _get_input_direction():
 	if Input.is_action_just_pressed("ui_cursor_left"):
 		return Vector2(-1, 0)
 	if Input.is_action_just_pressed("ui_cursor_right"):
 		return Vector2(1, 0)
 
-func updateThrob(delta):
-	modulate.a += throb_dir * delta / 2
+
+func _update_throb(delta):
+	modulate.a += _throb_dir * delta / 2
 	if modulate.a < 0.75 || modulate.a > 1.25:
-		throb_dir *= -1
+		_throb_dir *= -1
 
-func moveTo(targetPosition):
-	$Tween.interpolate_property(self, "position", position, targetPosition, 0.2, Tween.TRANS_LINEAR, Tween.EASE_IN)
-	$Tween.start()
 
-func check_for_input():
-	var inputDirection = getInputDirection()
-	if !inputDirection:
-		return false
+func _move_to(targetPosition):
+	move_tween.interpolate_property(self, "position", position, targetPosition, 0.2, Tween.TRANS_LINEAR, Tween.EASE_IN)
+	move_tween.start()
 
-	var targetPosition = Board.requestMoveCursor(inputDirection)
-	if targetPosition:
-		moveTo(targetPosition)
-	else:
-		bump(inputDirection)
-	return true
-
-func _process(delta):
-	updateThrob(delta)

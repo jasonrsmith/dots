@@ -51,6 +51,10 @@ window/size/test_height=540
 window/stretch/mode="2d"
 window/stretch/aspect="keep"
 
+[editor_plugins]
+
+enabled=PoolStringArray( "gut" )
+
 [input]
 
 ui_cursor_left={
