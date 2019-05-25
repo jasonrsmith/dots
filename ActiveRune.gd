@@ -6,7 +6,6 @@ signal active_rune_cleared (count)
 export (PackedScene) var Rune
 
 var current_active_rune
-var board
 var active_count
 
 func update_active_rune_count(count):

@@ -192,8 +192,27 @@ func _settle_board() -> void:
 					i += 1
 				_grid[y+i][x] = null
 
+"""
+func _find_available_slot_in_column(column, direction = Orientation.TOP) -> int:
+	if direction == Orientation.TOP:
+		rune.position = Vector2(column, 0) * rune_size
+		var y = 0
+		while _grid[y][column] == null && y < (board_size_y / 2 + 2):
+			y += 1
+		y -= 1
+		_grid[y][column] = rune
+		rune.shift(Vector2(column, y) * rune_size)
+		return y
+	rune.position = Vector2(column, board_size_y - 1) * rune_size
+	var i = 0
+	while _grid[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
+		i += 1
+	i -= 1
+	_grid[board_size_y - 1 - i][column] = rune
+	return 1
+"""
 
-func _add_rune(column, direction = Orientation.TOP):
+func _drop_rune_in_column(column: int, direction = Orientation.TOP) -> void:
 	var rune = _create_rune()
 	if direction == Orientation.TOP:
 		rune.position = Vector2(column, 0) * rune_size
@@ -212,6 +231,40 @@ func _add_rune(column, direction = Orientation.TOP):
 	_grid[board_size_y - 1 - i][column] = rune
 	rune.shift(Vector2(column, board_size_y - 1 - i) * rune_size)
 	return
+
+
+func _drop_runes_in_available_slots(count: int) -> void:
+	for i in range(count):
+		var available_slot = _get_available_slot()
+		if available_slot:
+			_drop_rune_in_column(available_slot.column, available_slot.direction)
+
+
+# TODO: refactor out finding final rune position for this and drop method
+func _materialize_rune_in_column(column, direction = Orientation.TOP):
+	var rune = _create_rune()
+	if direction == Orientation.TOP:
+		var i = 0
+		while _grid[i][column] == null && i < (board_size_y / 2 + 2):
+			i += 1
+		i -= 1
+		_grid[i][column] = rune
+		rune.position = Vector2(column, i) * rune_size
+		return
+	var i = 0
+	while _grid[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
+		i += 1
+	i -= 1
+	_grid[board_size_y - 1 - i][column] = rune
+	rune.position = Vector2(column, board_size_y - 1 - i) * rune_size
+	return
+
+
+func _materialize_runes_in_available_slots(count: int) -> void:
+	for i in range(count):
+		var available_slot = _get_available_slot()
+		if available_slot:
+			_materialize_rune_in_column(available_slot.column, available_slot.direction)
 
 
 func _check_for_loss():
@@ -306,19 +359,13 @@ func add_to_rune_drop_queue(count: int) -> void:
 	rune_drop_queue.push_back(count)
 
 
-func _drop_runes(count: int) -> void:
-	for i in range(count):
-		var available_slot = _get_available_slot()
-		if available_slot:
-			_add_rune(available_slot.column, available_slot.direction)
-
-
 func _on_rune_trickle_timer_timeout() -> void:
-	if _reposition_count != 0 || rune_drop_queue.size() == 0:
-		pass
-		#return
-	#_drop_runes(rune_drop_queue.pop_front())
-	_drop_runes(1)
+	if _reposition_count != 0:
+		return
+	_materialize_runes_in_available_slots(2)
+	var number_of_runes_to_drop = rune_drop_queue.pop_front()
+	if number_of_runes_to_drop:
+		_drop_runes_in_available_slots(number_of_runes_to_drop)
 
 
 func _on_rune_position_start() -> void:

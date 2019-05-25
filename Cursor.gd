@@ -20,9 +20,9 @@ func check_for_input() -> bool:
 	if !input_direction:
 		return false
 
-	var targetPosition = _board.request_move_cursor(input_direction)
-	if targetPosition:
-		_move_to(targetPosition)
+	var target_position = _board.request_move_cursor(input_direction)
+	if target_position:
+		_move_to(target_position)
 	else:
 		_bump(input_direction)
 	return true
@@ -45,7 +45,7 @@ func _update_throb(delta):
 		_throb_dir *= -1
 
 
-func _move_to(targetPosition):
-	move_tween.interpolate_property(self, "position", position, targetPosition, 0.2, Tween.TRANS_LINEAR, Tween.EASE_IN)
+func _move_to(target_position):
+	move_tween.interpolate_property(self, "position", position, target_position, 0.2, Tween.TRANS_LINEAR, Tween.EASE_IN)
 	move_tween.start()
 

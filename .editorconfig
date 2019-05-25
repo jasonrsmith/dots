@@ -1,0 +1,5 @@
+[Makefile]
+indent_style = tab
+
+[*.gd]
+indent_style = tab
