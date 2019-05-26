@@ -33,9 +33,9 @@ func _ready() -> void:
 	rune_trickle_timer.start()
 	active_rune.connect('active_rune_cleared', self, '_on_active_rune_cleared')
 	_grid = Grid.new(board_size_x, board_size_y, board_init_size_y, Rune)
-	print("grid1:")
-	print(_grid)
-	var res = _grid.connect('element_instanced', self, '_on_Grid_element_instanced')
+	_grid.connect('element_instanced', self, '_on_Grid_element_instanced')
+	_grid.connect('element_repositioned', self, '_on_Grid_element_repositioned')
+	_grid.connect('match_detected', self, '_on_Grid_match_detected')
 	_grid.setup_starting_placement()
 	_debug_draw_grid()
 
@@ -88,77 +88,14 @@ func _set_cursor_pos(new_cursor_pos: int) -> void:
 	_cursor_pos = new_cursor_pos
 
 
-func _shift_column_up(cursor_pos: int) -> void:
-	if _grid.get_grid_array()[0][cursor_pos] != null:
-		return
-	if _grid.get_grid_array()[(board_size_y / 2) + 1][cursor_pos] == null:
-		return
-	for y in range (board_size_y - 1):
-		_grid.get_grid_array()[y][cursor_pos] = _grid.get_grid_array()[y+1][cursor_pos]
-		if _grid.get_grid_array()[y][cursor_pos] != null:
-			_grid.get_grid_array()[y][cursor_pos].shift(Vector2(cursor_pos, y) * rune_size)
-	_grid.get_grid_array()[board_size_y - 1][cursor_pos] = null
-
-
-func _shift_column_down(cursor_pos: int) -> void:
-	if _grid.get_grid_array()[board_size_y - 1][cursor_pos] != null:
-		return
-	if _grid.get_grid_array()[(board_size_y / 2) - 1][cursor_pos] == null:
-		return
-	for y in range (board_size_y - 1):
-		y = board_size_y - y - 1
-		_grid.get_grid_array()[y][cursor_pos] = _grid.get_grid_array()[y - 1][cursor_pos]
-		if _grid.get_grid_array()[y][cursor_pos] != null:
-			_grid.get_grid_array()[y][cursor_pos].shift(Vector2(cursor_pos, y) * rune_size)
-	_grid.get_grid_array()[0][cursor_pos] = null
-
-
-func _shift_middle_row_left() -> void:
-	var y: int = board_size_y / 2
-	var tmp: Rune = _grid.get_grid_array()[y][0]
-	for x in range(board_size_x-1):
-		_grid.get_grid_array()[y][x] = _grid.get_grid_array()[y][x + 1]
-		if _grid.get_grid_array()[y][x]:
-			_grid.get_grid_array()[y][x].shift(Vector2(x, y) * rune_size)
-	_grid.get_grid_array()[y][board_size_x-1] = tmp
-	if _grid.get_grid_array()[y][board_size_x-1]:
-		_grid.get_grid_array()[y][board_size_x-1].shift(Vector2(board_size_x-1, y) * rune_size)
-
-
-func _shift_middle_row_right() -> void:
-	var y: int = board_size_y / 2
-	var tmp: Rune = _grid.get_grid_array()[y][board_size_x - 1]
-	for x in range(board_size_x - 1):
-		x = board_size_x - x - 1
-		_grid.get_grid_array()[y][x] = _grid.get_grid_array()[y][x - 1]
-		if _grid.get_grid_array()[y][x]:
-			_grid.get_grid_array()[y][x].shift(Vector2(x, y) * rune_size)
-	_grid.get_grid_array()[y][0] = tmp
-	if _grid.get_grid_array()[y][0]:
-		_grid.get_grid_array()[y][0].shift(Vector2(0, y) * rune_size)
-
-
-func _check_for_match() -> void:
-	var y = board_size_y / 2
-	for i in range(board_size_x):
-		var matches = [i]
-		for j in range(i + 1, board_size_x):
-			if !_grid.get_grid_array()[y][i] || !_grid.get_grid_array()[y][j] || _grid.get_grid_array()[y][i].colorType != _grid.get_grid_array()[y][j].colorType:
-				break
-			matches.append(j)
-		if matches.size() >= 3:
-			_score_and_remove_matches(matches)
-			_is_action_made_since_last_score = false
-			return
-
-
 func _score_and_remove_matches(matches: Array) -> void:
+	_is_action_made_since_last_score = false
 	success_sound.play()
 	var rune_type = _grid.get_grid_array()[board_size_y / 2][matches[0]].colorType
 	for i in matches:
 		_grid.get_grid_array()[board_size_y / 2][i].remove()
 		_grid.get_grid_array()[board_size_y / 2][i] = null
-	emit_signal("match_removed", matches.size(), rune_type, !_is_action_made_since_last_score)
+	emit_signal('match_removed', matches.size(), rune_type, !_is_action_made_since_last_score)
 
 
 func _settle_board() -> void:
@@ -322,19 +259,19 @@ func _on_active_rune_cleared(count) -> void:
 
 
 func _on_input_up() -> void:
-	_shift_column_up(_cursor_pos)
+	_grid.shift_column_up(_cursor_pos)
 
 
 func _on_input_down() -> void:
-	_shift_column_down(_cursor_pos)
+	_grid.shift_column_down(_cursor_pos)
 
 
 func _on_input_left() -> void:
-	_shift_middle_row_left()
+	_grid.shift_middle_row_left()
 
 
 func _on_input_right() -> void:
-	_shift_middle_row_right()
+	_grid.shift_middle_row_right()
 
 
 func _on_input_select() -> void:
@@ -366,13 +303,22 @@ func _on_rune_position_end() -> void:
 	_reposition_count -= 1
 	if _reposition_count != 0:
 		return
-	_check_for_match()
+	_grid.check_for_match()
 	_settle_board()
 
 
 func _on_Grid_element_instanced(rune, pos) -> void:
-	print(pos)
 	rune.position = (pos * rune_size)
 	dot_area.add_child(rune)
 	rune.connect("reposition_start", self, "_on_rune_position_start")
 	rune.connect("reposition_end", self, "_on_rune_position_end")
+
+
+func _on_Grid_element_repositioned(rune, prev_pos, new_pos) -> void:
+	rune.shift(new_pos * rune_size)
+
+
+func _on_Grid_match_detected(matches):
+	print('on_match_detected')
+	_score_and_remove_matches(matches)
+
