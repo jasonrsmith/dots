@@ -32,11 +32,8 @@ func _ready() -> void:
 	rune_trickle_timer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
 	rune_trickle_timer.start()
 	active_rune.connect('active_rune_cleared', self, '_on_active_rune_cleared')
-	_grid = Grid.new(board_size_x, board_size_y, board_init_size_y, Rune)
-	_grid.connect('element_instanced', self, '_on_Grid_element_instanced')
-	_grid.connect('element_repositioned', self, '_on_Grid_element_repositioned')
-	_grid.connect('match_detected', self, '_on_Grid_match_detected')
-	_grid.setup_starting_placement()
+	
+	_grid = _init_and_connect_grid()
 	_debug_draw_grid()
 
 
@@ -89,13 +86,14 @@ func _set_cursor_pos(new_cursor_pos: int) -> void:
 
 
 func _score_and_remove_matches(matches: Array) -> void:
-	_is_action_made_since_last_score = false
 	success_sound.play()
 	var rune_type = _grid.get_grid_array()[board_size_y / 2][matches[0]].colorType
 	for i in matches:
 		_grid.get_grid_array()[board_size_y / 2][i].remove()
 		_grid.get_grid_array()[board_size_y / 2][i] = null
 	emit_signal('match_removed', matches.size(), rune_type, !_is_action_made_since_last_score)
+	_is_action_made_since_last_score = false
+
 
 
 func _settle_board() -> void:
@@ -284,6 +282,15 @@ func _on_input_select() -> void:
 var rune_drop_queue := []
 func add_to_rune_drop_queue(count: int) -> void:
 	rune_drop_queue.push_back(count)
+
+
+func _init_and_connect_grid() -> Grid:
+	var grid = Grid.new(board_size_x, board_size_y, board_init_size_y, Rune)
+	grid.connect('element_instanced', self, '_on_Grid_element_instanced')
+	grid.connect('element_repositioned', self, '_on_Grid_element_repositioned')
+	grid.connect('match_detected', self, '_on_Grid_match_detected')
+	grid.setup_starting_placement()
+	return grid
 
 
 func _on_rune_trickle_timer_timeout() -> void:
