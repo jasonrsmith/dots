@@ -114,5 +114,35 @@ func check_for_match() -> void:
 			return
 
 
+func remove_from_center(indices_to_remove: Array) -> void:
+	for i in indices_to_remove:
+		get_center_row()[i].remove()
+		get_center_row()[i] = null
+
+
+func get_center_row():
+	return _grid[_size_y / 2]
+
+
+func settle() -> void:
+	var y = _size_y / 2
+	for x in range(_size_x):
+		if !_grid[y][x]:
+			if _grid[y-1][x]:
+				var i=1
+				while y >= i && _grid[y-i][x]:
+					_grid[y-i+1][x] = _grid[y-i][x]
+					emit_signal('element_repositioned', _grid[y - i + 1][x], Vector2(x, y - i), Vector2(x, y - i + 1))
+					i += 1
+				_grid[y-i+1][x] = null
+			elif _grid[y+1][x]:
+				var i=0
+				while  y+i+1 < _size_y && _grid[y+i+1][x]:
+					_grid[y+i][x] = _grid[y+i+1][x]
+					emit_signal('element_repositioned', _grid[y + i + 1][x], Vector2(x, y + i + 1), Vector2(x, y + i))
+					i += 1
+				_grid[y+i][x] = null
+
+
 func _on_element_repositioned(el, prev_pos, new_pos):
 	pass

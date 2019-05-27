@@ -7,7 +7,6 @@ onready var dot_area: Position2D = $Dots
 onready var rune_trickle_timer: Timer = $RuneTrickleTimer
 onready var success_sound: AudioStreamPlayer2D = $SuccessSound
 onready var active_rune: ActiveRune = $ActiveRune
-onready var grid: Grid = $Grid
 
 signal active_rune_cleared (count)
 signal match_removed (count, rune_type, is_combo)
@@ -29,7 +28,7 @@ var _grid: Grid
 
 func _ready() -> void:
 	_set_cursor_pos(_cursor_pos)
-	rune_trickle_timer.connect('timeout', self, '_on_rune_trickle_timer_timeout')
+	rune_trickle_timer.connect('timeout', self, '_on_Rune_trickle_timer_timeout')
 	rune_trickle_timer.start()
 	active_rune.connect('active_rune_cleared', self, '_on_active_rune_cleared')
 	
@@ -75,8 +74,8 @@ func request_move_cursor(input_direction) -> Vector2:
 func _create_rune() -> Rune:
 	var rune = Rune.instance()
 	dot_area.add_child(rune)
-	rune.connect("reposition_start", self, "_on_rune_position_start")
-	rune.connect("reposition_end", self, "_on_rune_position_end")
+	rune.connect("reposition_start", self, "_on_Rune_position_start")
+	rune.connect("reposition_end", self, "_on_Rune_position_end")
 	return rune
 
 
@@ -87,33 +86,11 @@ func _set_cursor_pos(new_cursor_pos: int) -> void:
 
 func _score_and_remove_matches(matches: Array) -> void:
 	success_sound.play()
-	var rune_type = _grid.get_grid_array()[board_size_y / 2][matches[0]].colorType
-	for i in matches:
-		_grid.get_grid_array()[board_size_y / 2][i].remove()
-		_grid.get_grid_array()[board_size_y / 2][i] = null
+	var rune_type = _grid.get_center_row()[matches[0]].colorType
+	_grid.remove_from_center(matches)
 	emit_signal('match_removed', matches.size(), rune_type, !_is_action_made_since_last_score)
 	_is_action_made_since_last_score = false
 
-
-
-func _settle_board() -> void:
-	var y = board_size_y / 2
-	for x in range(board_size_x):
-		if !_grid.get_grid_array()[y][x]:
-			if _grid.get_grid_array()[y-1][x]:
-				var i=1
-				while  y >= i && _grid.get_grid_array()[y-i][x]:
-					_grid.get_grid_array()[y-i+1][x] = _grid.get_grid_array()[y-i][x]
-					_grid.get_grid_array()[y-i+1][x].shift(Vector2(x, y-i+1) * rune_size)
-					i += 1
-				_grid.get_grid_array()[y-i+1][x] = null
-			elif _grid.get_grid_array()[y+1][x]:
-				var i=0
-				while  y+i+1 < board_size_y && _grid.get_grid_array()[y+i+1][x]:
-					_grid.get_grid_array()[y+i][x] = _grid.get_grid_array()[y+i+1][x]
-					_grid.get_grid_array()[y+i][x].shift(Vector2(x, y+i) * rune_size)
-					i += 1
-				_grid.get_grid_array()[y+i][x] = null
 
 """
 func _find_available_slot_in_column(column, direction = Orientation.TOP) -> int:
@@ -293,7 +270,7 @@ func _init_and_connect_grid() -> Grid:
 	return grid
 
 
-func _on_rune_trickle_timer_timeout() -> void:
+func _on_Rune_trickle_timer_timeout() -> void:
 	if _reposition_count != 0:
 		return
 	_materialize_runes_in_available_slots(2)
@@ -302,23 +279,23 @@ func _on_rune_trickle_timer_timeout() -> void:
 		_drop_runes_in_available_slots(number_of_runes_to_drop)
 
 
-func _on_rune_position_start() -> void:
+func _on_Rune_position_start() -> void:
 	_reposition_count += 1
 
 
-func _on_rune_position_end() -> void:
+func _on_Rune_position_end() -> void:
 	_reposition_count -= 1
 	if _reposition_count != 0:
 		return
 	_grid.check_for_match()
-	_settle_board()
+	_grid.settle()
 
 
 func _on_Grid_element_instanced(rune, pos) -> void:
 	rune.position = (pos * rune_size)
 	dot_area.add_child(rune)
-	rune.connect("reposition_start", self, "_on_rune_position_start")
-	rune.connect("reposition_end", self, "_on_rune_position_end")
+	rune.connect("reposition_start", self, "_on_Rune_position_start")
+	rune.connect("reposition_end", self, "_on_Rune_position_end")
 
 
 func _on_Grid_element_repositioned(rune, prev_pos, new_pos) -> void:
