@@ -1,4 +1,11 @@
 extends Position2D
+
+"""
+TODO:
+	finish refactoring out grid
+	fix bug: player movement inhibits rune drop
+	setup gameover signal
+"""
 class_name Board
 
 onready var cursor: Cursor = $Cursor.initialize(self)
@@ -19,6 +26,7 @@ export (int) var board_init_size_y
 export (int) var rune_size
 export (bool) var is_player_controlled
 
+# TODO: delete me
 enum Orientation {TOP, BOTTOM}
 
 var _cursor_pos := 0 setget _set_cursor_pos
@@ -106,7 +114,7 @@ func _drop_rune_in_column(column: int, direction = Orientation.TOP) -> void:
 
 func _drop_runes_in_available_slots(count: int) -> void:
 	for i in range(count):
-		var available_slot = _find_available_column()
+		var available_slot = _grid.find_available_column()
 		if available_slot:
 			_drop_rune_in_column(available_slot.column, available_slot.direction)
 
@@ -123,40 +131,9 @@ func _materialize_rune_in_column(column, direction = Orientation.TOP):
 
 func _materialize_runes_in_available_slots(count: int) -> void:
 	for i in range(count):
-		var available_column = _find_available_column()
+		var available_column = _grid.find_available_column()
 		if available_column:
 			_materialize_rune_in_column(available_column.column, available_column.direction)
-
-
-func _find_available_column() -> Dictionary:
-	var test_slots = range(board_size_x * 2)
-	test_slots = _shuffle_list(test_slots)
-	var row = 0
-	var direction
-	var column
-	while row < board_size_x * Orientation.size():
-		direction = test_slots[row] % Orientation.size()
-		column = test_slots[row] % board_size_x
-		if direction == Orientation.TOP && !_grid.get_grid_array()[0][column] || direction == Orientation.BOTTOM && !_grid.get_grid_array()[board_size_y-1][column]:
-			break
-		row += 1
-	if row == board_size_x * Orientation.size():
-		print("game over")
-		return {}
-	return {
-		direction = direction,
-		column = column
-	}
-
-
-func _shuffle_list(list: Array) -> Array:
-    var shuffledList = [] 
-    var indexList = range(list.size())
-    for i in range(list.size()):
-        var x: int = randi() % indexList.size()
-        shuffledList.append(list[indexList[x]])
-        indexList.remove(x)
-    return shuffledList
 
 
 func _debug_draw_grid() -> void:

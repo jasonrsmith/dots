@@ -5,6 +5,8 @@ signal element_instanced (el, pos)
 signal element_repositioned (el, prev_pos, new_pos)
 signal match_detected (matches)
 
+enum Orientation {TOP, BOTTOM}
+
 var _grid: = []
 var _size_x: int = 0
 var _size_y: int = 0
@@ -164,6 +166,36 @@ func put_next_available_slot_from_bottom(column, item) -> int:
 	i -= 1
 	_grid[_size_y - 1 - i][column] = item
 	return i
+
+
+func find_available_column() -> Dictionary:
+	var test_slots = range(_size_x * 2)
+	test_slots = _shuffle_list(test_slots)
+	var row = 0
+	var direction
+	var column
+	while row < _size_x * Orientation.size():
+		direction = test_slots[row] % Orientation.size()
+		column = test_slots[row] % _size_x
+		if direction == Orientation.TOP && !_grid[0][column] || direction == Orientation.BOTTOM && !_grid[_size_y-1][column]:
+			break
+		row += 1
+	if row == _size_x * Orientation.size():
+		return {}
+	return {
+		direction = direction,
+		column = column
+	}
+
+
+func _shuffle_list(list: Array) -> Array:
+    var shuffledList = []
+    var indexList = range(list.size())
+    for i in range(list.size()):
+        var x: int = randi() % indexList.size()
+        shuffledList.append(list[indexList[x]])
+        indexList.remove(x)
+    return shuffledList
 
 
 func _on_element_repositioned(el, prev_pos, new_pos):
