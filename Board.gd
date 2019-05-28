@@ -128,23 +128,7 @@ func _materialize_runes_in_available_slots(count: int) -> void:
 			_materialize_rune_in_column(available_column.column, available_column.direction)
 
 
-func _check_for_loss():
-	var hits = 0
-	for x in range(board_size_x):
-		if _grid.get_grid_array()[0][x] != null:
-			hits += 1
-		if _grid.get_grid_array()[board_size_y - 1][x] != null:
-			hits += 1
-	if (hits == board_size_x * 2):
-		print("game over")
-		return true
-	return false
-
-
 func _find_available_column() -> Dictionary:
-	if _check_for_loss():
-		return {}
-		
 	var test_slots = range(board_size_x * 2)
 	test_slots = _shuffle_list(test_slots)
 	var row = 0
@@ -156,6 +140,9 @@ func _find_available_column() -> Dictionary:
 		if direction == Orientation.TOP && !_grid.get_grid_array()[0][column] || direction == Orientation.BOTTOM && !_grid.get_grid_array()[board_size_y-1][column]:
 			break
 		row += 1
+	if row == board_size_x * Orientation.size():
+		print("game over")
+		return {}
 	return {
 		direction = direction,
 		column = column
