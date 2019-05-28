@@ -16,6 +16,7 @@ onready var active_rune: ActiveRune = $ActiveRune
 
 signal active_rune_cleared (count)
 signal match_removed (count, rune_type, is_combo)
+signal board_full
 
 export (PackedScene) var Rune
 
@@ -30,7 +31,7 @@ enum Orientation {TOP, BOTTOM}
 
 var _cursor_pos := 0 setget _set_cursor_pos
 var _reposition_count := 0
-var _is_action_made_since_last_score := false
+var _is_action_made_since_last_score := true
 var _grid: Grid
 
 func _ready() -> void:
@@ -114,8 +115,10 @@ func _drop_rune_in_column(column: int, direction = Orientation.TOP) -> void:
 func _drop_runes_in_available_slots(count: int) -> void:
 	for i in range(count):
 		var available_slot = _grid.find_available_column()
-		if available_slot:
-			_drop_rune_in_column(available_slot.column, available_slot.direction)
+		if !available_slot:
+			emit_signal('board_full')
+			return
+		_drop_rune_in_column(available_slot.column, available_slot.direction)
 
 
 func _materialize_rune_in_column(column, direction = Orientation.TOP):
@@ -131,8 +134,10 @@ func _materialize_rune_in_column(column, direction = Orientation.TOP):
 func _materialize_runes_in_available_slots(count: int) -> void:
 	for i in range(count):
 		var available_column = _grid.find_available_column()
-		if available_column:
-			_materialize_rune_in_column(available_column.column, available_column.direction)
+		if !available_column:
+			emit_signal('board_full')
+			return
+		_materialize_rune_in_column(available_column.column, available_column.direction)
 
 
 func _debug_draw_grid() -> void:
