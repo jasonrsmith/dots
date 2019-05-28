@@ -188,6 +188,10 @@ func find_available_column() -> Dictionary:
 	}
 
 
+func get_element_at(position: Vector2):
+	return _grid[position.y][position.x]
+
+
 func _shuffle_list(list: Array) -> Array:
     var shuffledList = []
     var indexList = range(list.size())

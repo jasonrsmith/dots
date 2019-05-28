@@ -2,7 +2,6 @@ extends Position2D
 
 """
 TODO:
-	finish refactoring out grid
 	fix bug: player movement inhibits rune drop
 	setup gameover signal
 """
@@ -26,7 +25,7 @@ export (int) var board_init_size_y
 export (int) var rune_size
 export (bool) var is_player_controlled
 
-# TODO: delete me
+# TODO: refactor me to Grid?
 enum Orientation {TOP, BOTTOM}
 
 var _cursor_pos := 0 setget _set_cursor_pos
@@ -143,11 +142,12 @@ func _debug_draw_grid() -> void:
 		child.queue_free()
 	for x in range(board_size_x):
 		for y in range(board_size_y):
+			var rune = _grid.get_element_at(Vector2(x, y))
 			var label = Label.new()
 			label.text = str(x) + "," + str(y)
 			label.text += "\n"
 			label.text += \
-				str(_grid.get_grid_array()[y][x].colorType) if _grid.get_grid_array()[y][x] \
+				str(rune.colorType) if rune \
 				else "null"
 			label.margin_top = y * rune_size
 			label.margin_left = x * rune_size
