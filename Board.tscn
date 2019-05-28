@@ -31,7 +31,6 @@ z_index = 1
 stream = ExtResource( 4 )
 
 [node name="RuneTrickleTimer" type="Timer" parent="."]
-wait_time = 300.0
 
 [node name="dotgrid" type="Sprite" parent="."]
 texture = ExtResource( 5 )

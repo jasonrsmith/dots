@@ -92,50 +92,21 @@ func _score_and_remove_matches(matches: Array) -> void:
 	_is_action_made_since_last_score = false
 
 
-"""
-func _find_available_slot_in_column(column, direction = Orientation.TOP) -> int:
-	if direction == Orientation.TOP:
-		rune.position = Vector2(column, 0) * rune_size
-		var y = 0
-		while _grid.get_grid_array()[y][column] == null && y < (board_size_y / 2 + 2):
-			y += 1
-		y -= 1
-		_grid.get_grid_array()[y][column] = rune
-		rune.shift(Vector2(column, y) * rune_size)
-		return y
-	rune.position = Vector2(column, board_size_y - 1) * rune_size
-	var i = 0
-	while _grid.get_grid_array()[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
-		i += 1
-	i -= 1
-	_grid.get_grid_array()[board_size_y - 1 - i][column] = rune
-	return 1
-"""
-
 func _drop_rune_in_column(column: int, direction = Orientation.TOP) -> void:
 	var rune = _create_rune()
 	if direction == Orientation.TOP:
+		var slot = _grid.put_next_available_slot_from_top(column, rune)
 		rune.position = Vector2(column, 0) * rune_size
-		var i = 0
-		while _grid.get_grid_array()[i][column] == null && i < (board_size_y / 2 + 2):
-			i += 1
-		i -= 1
-		_grid.get_grid_array()[i][column] = rune
-		rune.shift(Vector2(column, i) * rune_size)
+		rune.shift(Vector2(column, slot) * rune_size)
 		return
-	rune.position = Vector2(column, board_size_y - 1) * rune_size
-	var i = 0
-	while _grid.get_grid_array()[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
-		i += 1
-	i -= 1
-	_grid.get_grid_array()[board_size_y - 1 - i][column] = rune
-	rune.shift(Vector2(column, board_size_y - 1 - i) * rune_size)
-	return
+	var slot = _grid.put_next_available_slot_from_bottom(column, rune)
+	rune.position = Vector2(column, _grid.get_size_y() - 1) * rune_size
+	rune.shift(Vector2(column, _grid.get_size_y() - 1 - slot) * rune_size)
 
 
 func _drop_runes_in_available_slots(count: int) -> void:
 	for i in range(count):
-		var available_slot = _get_available_slot()
+		var available_slot = _find_available_column()
 		if available_slot:
 			_drop_rune_in_column(available_slot.column, available_slot.direction)
 
@@ -162,9 +133,9 @@ func _materialize_rune_in_column(column, direction = Orientation.TOP):
 
 func _materialize_runes_in_available_slots(count: int) -> void:
 	for i in range(count):
-		var available_slot = _get_available_slot()
-		if available_slot:
-			_materialize_rune_in_column(available_slot.column, available_slot.direction)
+		var available_column = _find_available_column()
+		if available_column:
+			_materialize_rune_in_column(available_column.column, available_column.direction)
 
 
 func _check_for_loss():
@@ -180,21 +151,21 @@ func _check_for_loss():
 	return false
 
 
-func _get_available_slot() -> Dictionary:
+func _find_available_column() -> Dictionary:
 	if _check_for_loss():
 		return {}
 		
 	var test_slots = range(board_size_x * 2)
 	test_slots = _shuffle_list(test_slots)
-	var i = 0
+	var row = 0
 	var direction
 	var column
-	while i < board_size_x * Orientation.size():
-		direction = test_slots[i] % Orientation.size()
-		column = test_slots[i] % board_size_x
+	while row < board_size_x * Orientation.size():
+		direction = test_slots[row] % Orientation.size()
+		column = test_slots[row] % board_size_x
 		if direction == Orientation.TOP && !_grid.get_grid_array()[0][column] || direction == Orientation.BOTTOM && !_grid.get_grid_array()[board_size_y-1][column]:
 			break
-		i += 1
+		row += 1
 	return {
 		direction = direction,
 		column = column
@@ -262,7 +233,8 @@ func add_to_rune_drop_queue(count: int) -> void:
 
 
 func _init_and_connect_grid() -> Grid:
-	var grid = Grid.new(board_size_x, board_size_y, board_init_size_y, Rune)
+	var rune_matcher = RuneMatcher.new()
+	var grid = Grid.new(board_size_x, board_size_y, board_init_size_y, Rune, rune_matcher)
 	grid.connect('element_instanced', self, '_on_Grid_element_instanced')
 	grid.connect('element_repositioned', self, '_on_Grid_element_repositioned')
 	grid.connect('match_detected', self, '_on_Grid_match_detected')
@@ -275,6 +247,7 @@ func _on_Rune_trickle_timer_timeout() -> void:
 		return
 	_materialize_runes_in_available_slots(2)
 	var number_of_runes_to_drop = rune_drop_queue.pop_front()
+	number_of_runes_to_drop = 1
 	if number_of_runes_to_drop:
 		_drop_runes_in_available_slots(number_of_runes_to_drop)
 
@@ -302,7 +275,6 @@ func _on_Grid_element_repositioned(rune, prev_pos, new_pos) -> void:
 	rune.shift(new_pos * rune_size)
 
 
-func _on_Grid_match_detected(matches):
-	print('on_match_detected')
+func _on_Grid_match_detected(matches) -> void:
 	_score_and_remove_matches(matches)
 

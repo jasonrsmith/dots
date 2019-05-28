@@ -33,13 +33,19 @@ _global_script_classes=[ {
 "class": "Rune",
 "language": "GDScript",
 "path": "res://Rune.gd"
+}, {
+"base": "Node",
+"class": "RuneMatcher",
+"language": "GDScript",
+"path": "res://rune_matcher.gd"
 } ]
 _global_script_class_icons={
 "ActiveRune": "",
 "Board": "",
 "Cursor": "",
 "Grid": "",
-"Rune": ""
+"Rune": "",
+"RuneMatcher": ""
 }
 
 [application]

@@ -10,17 +10,20 @@ var _size_x: int = 0
 var _size_y: int = 0
 var _init_fill_y: int = 0
 var _instantiator: PackedScene
+var _matcher: Object
 
-func _init(x: int, y: int, init_fill_y: int, instantiator: PackedScene) -> void:
+func _init(x: int, y: int, init_fill_y: int, instantiator: PackedScene, matcher: Object) -> void:
 	_size_x = x
 	_size_y = y
 	_init_fill_y = init_fill_y
 	_instantiator = instantiator
+	_matcher = matcher
 	
 	connect('element_repositioned', self, '_on_element_repositioned')
+	fill_null()
 
-	
-	# TODO: refactor to fill_null
+
+func fill_null():
 	for y in range (_size_y):
 		_grid.append([])
 		for x in range (_size_x):
@@ -65,7 +68,7 @@ func shift_column_down(col: int) -> void:
 
 func shift_middle_row_left() -> void:
 	var y: int = _size_y / 2
-	var tmp: Rune = _grid[y][0]
+	var tmp = _grid[y][0]
 	for x in range(_size_x-1):
 		_grid[y][x] = _grid[y][x + 1]
 		if _grid[y][x]:
@@ -77,7 +80,7 @@ func shift_middle_row_left() -> void:
 
 func shift_middle_row_right() -> void:
 	var y: int = _size_y / 2
-	var tmp: Rune = _grid[y][_size_x - 1]
+	var tmp = _grid[y][_size_x - 1]
 	for x in range(_size_x - 1):
 		x = _size_x - x - 1
 		_grid[y][x] = _grid[y][x - 1]
@@ -106,7 +109,8 @@ func check_for_match() -> void:
 		var matches = [i]
 		for j in range(i + 1, _size_x):
 			# TODO: extract match algorithm?
-			if !_grid[y][i] || !_grid[y][j] || _grid[y][i].colorType != _grid[y][j].colorType:
+			#if !_grid[y][i] || !_grid[y][j] || _grid[y][i].colorType != _grid[y][j].colorType:
+			if !_grid[y][i] || !_grid[y][j] || !_matcher.is_equal(_grid[y][i], _grid[y][j]):
 				break
 			matches.append(j)
 		if matches.size() >= 3:
@@ -142,6 +146,24 @@ func settle() -> void:
 					emit_signal('element_repositioned', _grid[y + i + 1][x], Vector2(x, y + i + 1), Vector2(x, y + i))
 					i += 1
 				_grid[y+i][x] = null
+
+
+func put_next_available_slot_from_top(column, item) -> int:
+	var i = 0
+	while _grid[i][column] == null && i < (_size_y / 2 + 2):
+		i += 1
+	i -= 1
+	_grid[i][column] = item
+	return i
+
+
+func put_next_available_slot_from_bottom(column, item) -> int:
+	var i = 0
+	while _grid[_size_y - 1 - i][column] == null && i < _size_y / 2:
+		i += 1
+	i -= 1
+	_grid[_size_y - 1 - i][column] = item
+	return i
 
 
 func _on_element_repositioned(el, prev_pos, new_pos):
