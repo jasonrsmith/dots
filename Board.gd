@@ -111,24 +111,14 @@ func _drop_runes_in_available_slots(count: int) -> void:
 			_drop_rune_in_column(available_slot.column, available_slot.direction)
 
 
-# TODO: refactor out finding final rune position for this and drop method
 func _materialize_rune_in_column(column, direction = Orientation.TOP):
 	var rune = _create_rune()
 	if direction == Orientation.TOP:
-		var i = 0
-		while _grid.get_grid_array()[i][column] == null && i < (board_size_y / 2 + 2):
-			i += 1
-		i -= 1
-		_grid.get_grid_array()[i][column] = rune
-		rune.position = Vector2(column, i) * rune_size
+		var slot = _grid.put_next_available_slot_from_top(column, rune)
+		rune.position = Vector2(column, slot) * rune_size
 		return
-	var i = 0
-	while _grid.get_grid_array()[board_size_y - 1 - i][column] == null && i < board_size_y / 2:
-		i += 1
-	i -= 1
-	_grid.get_grid_array()[board_size_y - 1 - i][column] = rune
-	rune.position = Vector2(column, board_size_y - 1 - i) * rune_size
-	return
+	var slot = _grid.put_next_available_slot_from_bottom(column, rune)
+	rune.position = Vector2(column, _grid.get_size_y() - 1 - slot) * rune_size
 
 
 func _materialize_runes_in_available_slots(count: int) -> void:
