@@ -41,6 +41,8 @@ func _ready() -> void:
 	
 	_grid = _init_and_connect_grid()
 	_debug_draw_grid()
+	
+	connect('board_full', self, '_on_board_full')
 
 
 func _process(delta: float) -> void:
@@ -236,3 +238,7 @@ func _on_Grid_element_repositioned(rune, prev_pos, new_pos) -> void:
 func _on_Grid_match_detected(matches) -> void:
 	_score_and_remove_matches(matches)
 
+
+func _on_board_full() -> void:
+	print('board full')
+	rune_trickle_timer.stop()

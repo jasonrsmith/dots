@@ -19,5 +19,4 @@ position = Vector2( 1404, 90 )
 margin_bottom = 277.0
 
 [node name="LoseGameDialog" parent="." instance=ExtResource( 4 )]
-visible = false
 
