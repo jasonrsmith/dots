@@ -122,14 +122,15 @@ func _drop_runes_in_available_slots(count: int) -> void:
 		_drop_rune_in_column(available_slot.column, available_slot.direction)
 
 
-func _materialize_rune_in_column(column, direction = Orientation.TOP):
+func _materialize_rune_in_column(column, direction = Orientation.TOP) -> Rune:
 	var rune = _create_rune()
 	if direction == Orientation.TOP:
 		var slot = _grid.put_next_available_slot_from_top(column, rune)
 		rune.position = Vector2(column, slot) * rune_size
-		return
+		return rune
 	var slot = _grid.put_next_available_slot_from_bottom(column, rune)
 	rune.position = Vector2(column, _grid.get_size_y() - 1 - slot) * rune_size
+	return rune
 
 
 func _materialize_runes_in_available_slots(count: int) -> void:
@@ -138,7 +139,8 @@ func _materialize_runes_in_available_slots(count: int) -> void:
 		if !available_column:
 			emit_signal('board_full')
 			return
-		_materialize_rune_in_column(available_column.column, available_column.direction)
+		var rune = _materialize_rune_in_column(available_column.column, available_column.direction)
+		rune.fade_in()
 
 
 func _debug_draw_grid() -> void:
@@ -240,5 +242,4 @@ func _on_Grid_match_detected(matches) -> void:
 
 
 func _on_board_full() -> void:
-	print('board full')
 	rune_trickle_timer.stop()

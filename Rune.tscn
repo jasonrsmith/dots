@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Rune.gd" type="Script" id=1]
 [ext_resource path="res://marbles/marble-blue.png" type="Texture" id=2]
@@ -33,6 +33,9 @@ tracks/1/keys = {
 }
 
 [sub_resource type="Animation" id=2]
+resource_name = "fade_in"
+
+[sub_resource type="Animation" id=3]
 length = 0.2
 tracks/0/type = "value"
 tracks/0/path = NodePath("Pivot/Sprite:position")
@@ -56,7 +59,8 @@ size = 64
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/explode = SubResource( 1 )
-anims/move = SubResource( 2 )
+anims/fade_in = SubResource( 2 )
+anims/move = SubResource( 3 )
 
 [node name="Tween" type="Tween" parent="."]
 

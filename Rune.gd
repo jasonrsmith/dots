@@ -42,6 +42,14 @@ func remove():
 	yield($AnimationPlayer, "animation_finished")
 	#emit_signal("reposition_end")
 
+
+func fade_in() -> void:
+	emit_signal('reposition_start')
+	$AnimationPlayer.play('fade_in')
+	yield($AnimationPlayer, 'animation_finished')
+	emit_signal('reposition_end')
+
+
 func _ready():
 	initType()
 	
