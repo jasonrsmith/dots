@@ -3,7 +3,6 @@ extends Position2D
 """
 TODO:
 	fix bug: player movement inhibits rune drop
-	setup gameover signal
 """
 class_name Board
 
