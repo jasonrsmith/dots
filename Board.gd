@@ -2,7 +2,6 @@ extends Position2D
 
 """
 TODO:
-	fix bug: player movement inhibits rune drop
 """
 class_name Board
 
@@ -205,8 +204,8 @@ func _init_and_connect_grid() -> Grid:
 
 
 func _on_Rune_trickle_timer_timeout() -> void:
-	if _reposition_count != 0:
-		return
+	#if _reposition_count != 0:
+	#	return
 	_materialize_runes_in_available_slots(2)
 	var number_of_runes_to_drop = rune_drop_queue.pop_front()
 	number_of_runes_to_drop = 1
@@ -219,9 +218,10 @@ func _on_Rune_position_start() -> void:
 
 
 func _on_Rune_position_end() -> void:
-	_reposition_count -= 1
-	if _reposition_count != 0:
-		return
+#	_reposition_count -= 1
+#	if _reposition_count != 0:
+#		return
+#	print("check for match")
 	_grid.check_for_match()
 	_grid.settle()
 
@@ -242,4 +242,5 @@ func _on_Grid_match_detected(matches) -> void:
 
 
 func _on_board_full() -> void:
+	print("board full")
 	rune_trickle_timer.stop()

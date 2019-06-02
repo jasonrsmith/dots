@@ -39,11 +39,13 @@ func shift(targetPosition):
 func remove():
 	#emit_signal("reposition_start")
 	$AnimationPlayer.play("explode");
+	#$AnimationPlayer.play("burn");
 	yield($AnimationPlayer, "animation_finished")
 	#emit_signal("reposition_end")
 
 
 func fade_in() -> void:
+	#self.self_modulate = 0
 	emit_signal('reposition_start')
 	$AnimationPlayer.play('fade_in')
 	yield($AnimationPlayer, 'animation_finished')
@@ -51,6 +53,10 @@ func fade_in() -> void:
 
 
 func _ready():
+	connect('reposition_start', self, '_on_reposition_start')
 	initType()
-	
 
+
+func _on_reposition_start():
+	pass
+	#visible = true
