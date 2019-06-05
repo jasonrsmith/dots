@@ -37,19 +37,25 @@ func shift(targetPosition):
 	emit_signal("reposition_end")
 
 func remove():
-	#emit_signal("reposition_start")
+	emit_signal("reposition_start")
 	$AnimationPlayer.play("explode");
 	#$AnimationPlayer.play("burn");
 	yield($AnimationPlayer, "animation_finished")
-	#emit_signal("reposition_end")
+	emit_signal("reposition_end")
 
 
 func fade_in() -> void:
 	#self.self_modulate = 0
+	print("fade in")
 	emit_signal('reposition_start')
 	$AnimationPlayer.play('fade_in')
 	yield($AnimationPlayer, 'animation_finished')
 	emit_signal('reposition_end')
+	print("fade complete")
+
+
+func hide():
+	$Pivot/Sprite.self_modulate = 0
 
 
 func _ready():

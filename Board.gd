@@ -98,7 +98,9 @@ func _score_and_remove_matches(matches: Array) -> void:
 	_grid.remove_from_center(matches)
 	emit_signal('match_removed', matches.size(), rune_type, !_is_action_made_since_last_score)
 	_is_action_made_since_last_score = false
-
+	#_materialize_runes_in_available_slots(randi() % matches.size())
+	_materialize_rune_in_column(0)
+	#_materialize_runes_in_available_slots(3)
 
 func _drop_rune_in_column(column: int, direction = Orientation.TOP) -> void:
 	var rune = _create_rune()
@@ -123,12 +125,14 @@ func _drop_runes_in_available_slots(count: int) -> void:
 
 func _materialize_rune_in_column(column, direction = Orientation.TOP) -> Rune:
 	var rune = _create_rune()
+	rune.hide()
 	if direction == Orientation.TOP:
 		var slot = _grid.put_next_available_slot_from_top(column, rune)
 		rune.position = Vector2(column, slot) * rune_size
-		return rune
-	var slot = _grid.put_next_available_slot_from_bottom(column, rune)
-	rune.position = Vector2(column, _grid.get_size_y() - 1 - slot) * rune_size
+	else:
+		var slot = _grid.put_next_available_slot_from_bottom(column, rune)
+		rune.position = Vector2(column, _grid.get_size_y() - 1 - slot) * rune_size
+	rune.fade_in()
 	return rune
 
 
@@ -139,7 +143,6 @@ func _materialize_runes_in_available_slots(count: int) -> void:
 			emit_signal('board_full')
 			return
 		var rune = _materialize_rune_in_column(available_column.column, available_column.direction)
-		rune.fade_in()
 
 
 func _debug_draw_grid() -> void:
@@ -206,7 +209,6 @@ func _init_and_connect_grid() -> Grid:
 func _on_Rune_trickle_timer_timeout() -> void:
 	#if _reposition_count != 0:
 	#	return
-	_materialize_runes_in_available_slots(2)
 	var number_of_runes_to_drop = rune_drop_queue.pop_front()
 	number_of_runes_to_drop = 1
 	if number_of_runes_to_drop:
@@ -222,8 +224,10 @@ func _on_Rune_position_end() -> void:
 #	if _reposition_count != 0:
 #		return
 #	print("check for match")
-	_grid.check_for_match()
 	_grid.settle()
+	var matched_columns = _grid.check_for_match()
+	if (matched_columns):
+		_score_and_remove_matches(matched_columns)
 
 
 func _on_Grid_element_instanced(rune, pos) -> void:
@@ -238,7 +242,8 @@ func _on_Grid_element_repositioned(rune, prev_pos, new_pos) -> void:
 
 
 func _on_Grid_match_detected(matches) -> void:
-	_score_and_remove_matches(matches)
+	pass
+	#_score_and_remove_matches(matches)
 
 
 func _on_board_full() -> void:

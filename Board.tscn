@@ -22,7 +22,6 @@ rune_size = 64
 [node name="Dots" type="Position2D" parent="."]
 
 [node name="DebugArea" type="Node2D" parent="."]
-visible = false
 z_index = 1
 
 [node name="Cursor" parent="." instance=ExtResource( 3 )]
@@ -31,7 +30,7 @@ z_index = 1
 stream = ExtResource( 4 )
 
 [node name="RuneTrickleTimer" type="Timer" parent="."]
-wait_time = 5.0
+wait_time = 300.0
 
 [node name="dotgrid" type="Sprite" parent="."]
 texture = ExtResource( 5 )

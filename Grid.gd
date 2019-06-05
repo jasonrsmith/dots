@@ -105,19 +105,17 @@ func get_grid_array() -> Array:
 	return _grid
 
 
-func check_for_match() -> void:
+func check_for_match() -> Array:
 	var y = _size_y / 2
 	for i in range(_size_x):
 		var matches = [i]
 		for j in range(i + 1, _size_x):
-			# TODO: extract match algorithm?
-			#if !_grid[y][i] || !_grid[y][j] || _grid[y][i].colorType != _grid[y][j].colorType:
 			if !_grid[y][i] || !_grid[y][j] || !_matcher.is_equal(_grid[y][i], _grid[y][j]):
 				break
 			matches.append(j)
 		if matches.size() >= 3:
-			emit_signal('match_detected', matches)
-			return
+			return matches
+	return []
 
 
 func remove_from_center(indices_to_remove: Array) -> void:
